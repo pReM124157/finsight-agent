@@ -1,0 +1,212 @@
+[
+  {
+    "symbol": "TCS",
+    "verdict": "HOLD",
+    "reasoning": "Risk Level: MEDIUM\nLearning Boost: 0\nPerformance Score: 0\nPortfolio Health: N/A\nFinal Confidence Score: 4",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:17:29.686Z"
+  },
+  {
+    "symbol": "TCS",
+    "verdict": "HOLD",
+    "reasoning": "Risk Level: MEDIUM\nLearning Boost: 0\nPerformance Score: 0\nPortfolio Health: N/A\nFinal Confidence Score: 4",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:30:06.341Z"
+  },
+  {
+    "symbol": "tcs",
+    "verdict": "HOLD",
+    "reasoning": "TCS currently shows a stable but range-bound outlook with MEDIUM risk. Conviction is not yet strong enough for aggressive action. We recommend a HOLD position while monitoring for decisive entry signals.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:31:16.070Z"
+  },
+  {
+    "symbol": "tcs",
+    "verdict": "HOLD",
+    "reasoning": "TCS currently shows a stable but range-bound outlook with MEDIUM risk. Conviction is not yet strong enough for aggressive action. We recommend a HOLD position while monitoring for decisive entry signals.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:35:53.548Z"
+  },
+  {
+    "symbol": "tcs",
+    "verdict": "HOLD",
+    "reasoning": "TCS currently shows a stable but range-bound outlook with MEDIUM risk. Conviction is not yet strong enough for aggressive action. We recommend a HOLD position while monitoring for decisive entry signals.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:42:07.044Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "RELIANCE currently shows a stable but range-bound outlook with MEDIUM risk. Conviction is not yet strong enough for aggressive action. We recommend a HOLD position while monitoring for decisive entry signals.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:43:02.283Z"
+  },
+  {
+    "symbol": "google",
+    "verdict": "HOLD",
+    "reasoning": "GOOGLE currently shows a stable but range-bound outlook with LOW risk. Conviction is not yet strong enough for aggressive action. We recommend a HOLD position while monitoring for decisive entry signals.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:44:50.555Z"
+  },
+  {
+    "symbol": "google\nanalyze reliance\nanalyze tcs\nanalyze sunpharma",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:46:47.398Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:48:19.255Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:49:24.732Z"
+  },
+  {
+    "symbol": "googl\nanalyze reliance\nanalyze tcs",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:50:34.363Z"
+  },
+  {
+    "symbol": "googl\nanalyze reliance\nanalyze tcs",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:50:34.547Z"
+  },
+  {
+    "symbol": "googl\nanalyze reliance\nanalyze tcs",
+    "verdict": "SELL",
+    "reasoning": "This company shows a SELL profile based on valuation strength, risk level, profitability, market stability, portfolio fit, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:50:35.065Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:51:30.581Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:51:30.842Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "STRONG BUY",
+    "reasoning": "Alphabet Inc Class A shows a STRONG BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:51:55.332Z"
+  },
+  {
+    "symbol": "google",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:56:03.583Z"
+  },
+  {
+    "symbol": "google",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:56:34.411Z"
+  },
+  {
+    "symbol": "tcs",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:56:36.267Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:56:37.939Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T08:58:05.153Z"
+  }
+]

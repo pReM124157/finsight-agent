@@ -1,0 +1,14 @@
+{
+  "watch": ["src"],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "*.log",
+    "logs/*",
+    "tmp/*",
+    "data/*",
+    "recommendations.json",
+    "portfolio.json",
+    ".git/*",
+    "node_modules/*"
+  ]
+}
