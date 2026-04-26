@@ -9,17 +9,17 @@ import { startPortfolioScheduler } from "./scheduler/portfolio.scheduler.js";
 
 const app = express();
 
+app.get("/", (req, res) => {
+  return res.status(200).send("FinSight Backend Live");
+});
+
+
 app.use(cors({
   origin: "*"
 }));
 app.use(express.json());
 
-/*
-Root Test Route
-*/
-app.get("/", (req, res) => {
-  res.send("FinSight Backend Live");
-});
+
 
 /*
 Supabase Test Route
