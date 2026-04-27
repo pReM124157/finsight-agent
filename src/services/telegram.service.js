@@ -386,13 +386,22 @@ ${text}
       mode: "conversation"
     });
 
-    await bot.telegram.sendMessage(
-      chatId,
-      `${aiResponse.response}
+    const needsDisclaimer =
+      text.toLowerCase().includes("buy") ||
+      text.toLowerCase().includes("invest") ||
+      text.toLowerCase().includes("stock") ||
+      text.toLowerCase().includes("portfolio") ||
+      text.toLowerCase().includes("money") ||
+      text.toLowerCase().includes("market");
+
+    const finalMessage = needsDisclaimer
+      ? `${aiResponse.response}
 ⚠️ For educational purposes only.
 Not SEBI registered investment advice.
 Do your own research before investing.`
-    );
+      : aiResponse.response;
+
+    await bot.telegram.sendMessage(chatId, finalMessage);
     return;
   } catch (error) {
 
