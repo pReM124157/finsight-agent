@@ -150,43 +150,43 @@ export default function Home() {
             </h2>
 
             <div className={`text-5xl font-black p-8 rounded-3xl mb-8 inline-block ${
-              analysis.decision.finalDecision.includes('BUY') ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 
-              analysis.decision.finalDecision.includes('SELL') ? 'bg-red-900/30 text-red-400 border border-red-500/30' : 'bg-gray-800 text-gray-300 border border-gray-700'
+              (analysis.decision?.finalDecision || '').includes('BUY') ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 
+              (analysis.decision?.finalDecision || '').includes('SELL') ? 'bg-red-900/30 text-red-400 border border-red-500/30' : 'bg-gray-800 text-gray-300 border border-gray-700'
             }`}>
-              {analysis.decision.finalDecision}
+              {analysis.decision?.finalDecision || 'N/A'}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                 <p className="text-xs uppercase opacity-60 mb-1">Confidence Score</p>
-                <p className="text-2xl font-bold">{analysis.decision.finalConfidenceScore}/10</p>
+                <p className="text-2xl font-bold">{analysis.decision?.finalConfidenceScore || 0}/10</p>
               </div>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                 <p className="text-xs uppercase opacity-60 mb-1">Risk Level</p>
-                <p className="text-2xl font-bold">{analysis.risk.riskLevel}</p>
+                <p className="text-2xl font-bold">{analysis.risk?.riskLevel || 'N/A'}</p>
               </div>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                 <p className="text-xs uppercase opacity-60 mb-1">Learning Boost</p>
-                <p className="text-2xl font-bold">+{analysis.learning.learningBoost}</p>
+                <p className="text-2xl font-bold">+{analysis.learning?.learningBoost || 0}</p>
               </div>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                 <p className="text-xs uppercase opacity-60 mb-1">Performance Score</p>
-                <p className="text-2xl font-bold">+{analysis.performance.performanceScore}</p>
+                <p className="text-2xl font-bold">+{analysis.performance?.performanceScore || 0}</p>
               </div>
             </div>
 
             <div className="mt-10 p-6 bg-white/5 rounded-2xl border border-white/10 text-left">
               <p className="text-lg opacity-90 leading-relaxed">
-                <span className="font-bold text-white">AI Reasoning:</span> {analysis.decision.reason}
+                <span className="font-bold text-white">AI Reasoning:</span> {analysis.decision?.reason || 'No reasoning provided.'}
               </p>
               <div className="mt-6 flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                 <span className="text-blue-400 font-bold">Recommended Action:</span>
                 <span className="text-white font-medium italic">
-                  {analysis.decision.finalDecision === "STRONG BUY"
+                  {analysis.decision?.finalDecision === "STRONG BUY"
                     ? "Accumulate aggressively"
-                    : analysis.decision.finalDecision === "BUY"
+                    : analysis.decision?.finalDecision === "BUY"
                     ? "Accumulate gradually"
-                    : analysis.decision.finalDecision === "SELL"
+                    : analysis.decision?.finalDecision === "SELL"
                     ? "Reduce exposure"
                     : "Monitor closely"}
                 </span>
