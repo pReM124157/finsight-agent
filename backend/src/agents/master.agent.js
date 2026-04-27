@@ -35,8 +35,16 @@ Guidelines:
     }
 
     // Otherwise, treat as stock analysis request
-    const stockData = input;
-    const ticker = stockData.Symbol || stockData.ticker || "UNKNOWN";
+    const stockData = input || {};
+    console.log("MASTER AGENT INPUT:", JSON.stringify(stockData).substring(0, 200));
+
+    const ticker = 
+      stockData.Symbol || 
+      stockData.ticker || 
+      stockData.symbol || 
+      "UNKNOWN";
+
+    console.log("MASTER AGENT TICKER:", ticker);
 
 
     // PHASE 1: Core Analysis (Risk, Fundamentals, Technicals, Valuation)

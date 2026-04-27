@@ -35,11 +35,11 @@ export async function getCompanyOverview(symbol) {
     console.log("RAW YAHOO RESULT:", result);
 
     const companyOverview = {
-      Symbol: formattedSymbol,
+      Symbol: fetchSymbol,
       Name:
         result?.longName ||
         result?.shortName ||
-        formattedSymbol,
+        fetchSymbol,
 
       MarketCapitalization: result?.marketCap || 0,
       PERatio: result?.trailingPE || 0,
@@ -61,12 +61,13 @@ export async function getCompanyOverview(symbol) {
     return companyOverview;
 
   } catch (error) {
-    console.error(
-      "Yahoo Finance Error:",
-      error.message
-    );
-
-    return {};
+    console.error("Yahoo Finance Error:", error.message);
+    
+    // Return at least the symbol to prevent downstream "UNKNOWN" errors
+    const upperSymbol = symbol.toUpperCase().replace(/\s+/g, "");
+    return {
+      Symbol: upperSymbol.includes(".") ? upperSymbol : `${upperSymbol}.NS`
+    };
   }
 }
 
