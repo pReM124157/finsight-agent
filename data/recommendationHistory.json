@@ -1,0 +1,122 @@
+[
+  {
+    "symbol": "TCS",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T09:01:28.067Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:13:36.407Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Limited financial data available. Defaulting to HOLD until stronger conviction signals are available.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:15:34.570Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "HOLD",
+    "reasoning": "Reliance Industries Limited shows a HOLD profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:16:43.800Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "BUY",
+    "reasoning": "Reliance Industries Limited shows a BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:19:48.268Z"
+  },
+  {
+    "symbol": "nvidia",
+    "verdict": "HOLD",
+    "reasoning": "NVIDIA shows a HOLD profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:20:12.643Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "BUY",
+    "reasoning": "Alphabet Inc. shows a BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:24:23.493Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "BUY",
+    "reasoning": "Alphabet Inc. shows a BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:25:12.252Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "STRONG BUY",
+    "reasoning": "Reliance Industries Limited shows a STRONG BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:25:48.768Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "STRONG BUY",
+    "reasoning": "Reliance Industries Limited shows a STRONG BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:25:49.031Z"
+  },
+  {
+    "symbol": "GOOGL",
+    "verdict": "STRONG BUY",
+    "reasoning": "Alphabet Inc. shows a STRONG BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:27:54.066Z"
+  },
+  {
+    "symbol": "reliance",
+    "verdict": "BUY",
+    "reasoning": "Reliance Industries Limited shows a BUY profile based on financial strength, valuation quality, risk profile, and historical learning performance.",
+    "confidenceBoost": 0,
+    "entryPrice": null,
+    "isValidated": false,
+    "performanceScore": null,
+    "createdAt": "2026-04-26T12:28:36.553Z"
+  }
+]
