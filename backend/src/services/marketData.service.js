@@ -24,18 +24,13 @@ export async function getCompanyOverview(symbol) {
   try {
     const upperSymbol = symbol.toUpperCase().replace(/\s+/g, "");
 
-    const formattedSymbol = indianStocks.includes(upperSymbol)
-      ? `${upperSymbol}.NS`
-      : upperSymbol;
+    const fetchSymbol = upperSymbol.includes(".")
+      ? upperSymbol
+      : `${upperSymbol}.NS`;
 
-    console.log(
-      "Fetching Yahoo Finance data for:",
-      formattedSymbol
-    );
+    console.log("FETCH SYMBOL (Overview):", fetchSymbol);
 
-    const result = await yahooFinance.quote(
-      formattedSymbol
-    );
+    const result = await yahooFinance.quote(fetchSymbol);
 
     console.log("RAW YAHOO RESULT:", result);
 
@@ -78,24 +73,25 @@ export async function getCompanyOverview(symbol) {
 export async function getLiveMarketData(symbol) {
   try {
     const upperSymbol = symbol.toUpperCase().replace(/\s+/g, "");
-    const formattedSymbol = indianStocks.includes(upperSymbol)
-      ? `${upperSymbol}.NS`
-      : upperSymbol;
-    console.log(
-      "Fetching LIVE market data for:",
-      formattedSymbol
-    );
-    const result = await yahooFinance.quote(
-      formattedSymbol
-    );
-    console.log("LIVE MARKET RESULT:", result);
+    
+    const fetchSymbol = upperSymbol.includes(".")
+      ? upperSymbol
+      : `${upperSymbol}.NS`;
+
+    console.log("FETCH SYMBOL (Live):", fetchSymbol);
+
+    const result = await yahooFinance.quote(fetchSymbol);
+    
+    const currentPrice = 
+      result?.regularMarketPrice ||
+      result?.currentPrice ||
+      result?.previousClose ||
+      0;
+
+    console.log("LIVE PRICE:", currentPrice);
     const liveMarketData = {
-      symbol: formattedSymbol,
-      currentPrice:
-        result?.regularMarketPrice ||
-        result?.currentPrice ||
-        result?.previousClose ||
-        0,
+      symbol: fetchSymbol,
+      currentPrice: currentPrice,
       previousClose:
         result?.regularMarketPreviousClose ||
         result?.previousClose ||
