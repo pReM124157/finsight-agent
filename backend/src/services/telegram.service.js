@@ -106,10 +106,10 @@ Not SEBI registered investment advice.`
 
     if (lowerText.startsWith("/quick ")) {
       const ticker = text.substring(7).trim();
-      if (!ticker) {
+      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
         await bot.telegram.sendMessage(
           chatId,
-          "Please provide a stock ticker.\nExample: /quick RELIANCE.NS"
+          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
         );
         return;
       }
@@ -255,6 +255,16 @@ Not SEBI registered investment advice.
      */
     if (userStates.get(chatId) === "AWAITING_STOCK") {
       userStates.delete(chatId);
+      
+      const ticker = text.trim().toUpperCase();
+      if (ticker.includes(" ") || ticker.length > 15) {
+        await bot.telegram.sendMessage(
+          chatId,
+          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
+        );
+        return;
+      }
+      
       await performAnalysis(chatId, text);
       return;
     }
@@ -332,12 +342,10 @@ Do your own research before investing.
     if (lowerText.startsWith("analyze ")) {
       const ticker = text.substring(8).trim();
 
-      if (!ticker) {
-        userStates.set(chatId, "AWAITING_STOCK");
-
+      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
         await bot.telegram.sendMessage(
           chatId,
-          "Please enter the stock/company name"
+          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
         );
         return;
       }
@@ -349,12 +357,10 @@ Do your own research before investing.
     if (lowerText.startsWith("/analyze ")) {
       const ticker = text.substring(9).trim();
 
-      if (!ticker) {
-        userStates.set(chatId, "AWAITING_STOCK");
-
+      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
         await bot.telegram.sendMessage(
           chatId,
-          "Please enter the stock/company name"
+          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
         );
         return;
       }
