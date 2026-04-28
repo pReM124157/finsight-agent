@@ -4,17 +4,23 @@ const yahooFinance = new YahooFinance();
 
 export async function technicalAgent(symbol) {
   try {
+    const upperSymbol = symbol.toUpperCase().replace(/\s+/g, "");
+    const fetchSymbol = upperSymbol.includes(".")
+      ? upperSymbol
+      : `${upperSymbol}.NS`;
+
     const period2 = new Date();
     const period1 = new Date();
     period1.setDate(period2.getDate() - 100); // Fetch 100 days to be safe
 
     const queryOptions = {
       period1: period1.toISOString().split('T')[0],
+      period2: period2.toISOString().split('T')[0],
       interval: '1d'
     };
 
-    console.log(`Fetching historical data for ${symbol}...`);
-    const history = await yahooFinance.historical(symbol, queryOptions);
+    console.log(`Fetching historical data for ${fetchSymbol}...`);
+    const history = await yahooFinance.historical(fetchSymbol, queryOptions);
     
     if (!history || !history.length || history.length < 20) {
       console.warn(`Insufficient history for ${symbol}`);
