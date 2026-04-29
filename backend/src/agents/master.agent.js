@@ -12,6 +12,7 @@ import { analyzeExitSignal } from "./exitSignal.agent.js";
 import { calculatePositionSize } from "./positionSizing.agent.js";
 import { analyzeRebalancing } from "./rebalancer.agent.js";
 import { logRecommendation, getLearningBoost } from "./performanceTracker.agent.js";
+import { analyzeEventRisk } from "./eventRisk.agent.js";
 
 import { generateInvestmentAnalysis } from "../services/claude.service.js";
 
@@ -122,6 +123,12 @@ Guidelines:
       valuationScore: valuation.score
     });
 
+    // PHASE 2.6: Event Risk Analysis
+    const eventRisk = await analyzeEventRisk({
+      symbol: ticker,
+      earningsDate: stockData.EarningsDate
+    });
+
     // PHASE 3: Confidence Alignment & Learning Feedback
     const learningBoost = await getLearningBoost(ticker);
     
@@ -221,6 +228,21 @@ Guidelines:
       finalDecision.finalConfidenceScore = Math.min(finalDecision.finalConfidenceScore, 4);
     }
 
+    // EVENT RISK OVERRIDE (Event Risk > All Entry/Sizing Decisions)
+    if (eventRisk.eventRisk === "HIGH" || eventRisk.eventRisk === "CRITICAL") {
+      console.log(`[Conflict Resolution] ${ticker}: High Event Risk (${eventRisk.eventType}) detected. Overriding analysis.`);
+      
+      entryTiming.finalExecutionAdvice = `${eventRisk.action}. ${eventRisk.reason}`;
+      entryTiming.entryUrgency = "LOW";
+      entryTiming.strategy = "AVOID ENTRY";
+      
+      positionSizing.capitalAction = "Avoid fresh deployment before high-impact events.";
+      positionSizing.conviction = "LOW";
+      positionSizing.allocation = "0%";
+      
+      finalDecision.finalConfidenceScore = Math.min(finalDecision.finalConfidenceScore, 3);
+    }
+
     // PHASE 5: Action Alignment
     // Override recommended action based on combined verdict + timing urgency
     function getRecommendedAction(verdict, entryUrgency) {
@@ -265,7 +287,8 @@ Guidelines:
       entryTiming,
       exitSignal,
       positionSizing,
-      rebalancer
+      rebalancer,
+      eventRisk
     };
   } catch (error) {
     console.error("Master Agent Error:", error.message);

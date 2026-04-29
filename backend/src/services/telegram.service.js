@@ -30,6 +30,7 @@ async function performAnalysis(chatId, symbol) {
     const exitSignal = result.exitSignal || {};
     const positionSizing = result.positionSizing || {};
     const rebalancer = result.rebalancer || {};
+    const eventRisk = result.eventRisk || {};
     const ticker = symbol.toUpperCase();
 
     // Use the final execution advice directly from the agent
@@ -62,6 +63,12 @@ ${positionSizing.reason ? `\n📊 Sizing Logic: ${positionSizing.reason}` : ""}
 
 📌 Recommended Action:
 ${result.rebalancing?.action || "Monitor and wait for confirmation"}
+
+🚨 EVENT RISK ANALYSIS
+Risk Level: ${eventRisk.eventRisk || "LOW"}
+Event Type: ${eventRisk.eventType || "NONE"}
+Action: ${eventRisk.action || "Monitor as usual"}
+Reason: ${eventRisk.reason || "No imminent high-impact events."}
 
 🚨 ENTRY SIGNAL DETECTED
 🎯 Strategy: ${entryTiming?.strategy || "AVOID ENTRY"}

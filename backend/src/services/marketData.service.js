@@ -36,7 +36,8 @@ export async function getCompanyOverview(symbol) {
         "financialData",
         "defaultKeyStatistics",
         "assetProfile",
-        "summaryDetail"
+        "summaryDetail",
+        "calendarEvents"
       ]
     });
 
@@ -46,7 +47,8 @@ export async function getCompanyOverview(symbol) {
       financialData = {},
       defaultKeyStatistics = {},
       assetProfile = {},
-      summaryDetail = {}
+      summaryDetail = {},
+      calendarEvents = {}
     } = result;
 
     const companyOverview = {
@@ -64,7 +66,8 @@ export async function getCompanyOverview(symbol) {
       Beta: defaultKeyStatistics.beta ?? null,
       Sector: assetProfile.sector ?? null,
       Industry: assetProfile.industry ?? null,
-      BusinessSummary: assetProfile.longBusinessSummary ?? null
+      BusinessSummary: assetProfile.longBusinessSummary ?? null,
+      EarningsDate: calendarEvents?.earnings?.earningsDate?.[0] ?? null
     };
 
     console.log("FINAL OVERVIEW:", companyOverview);
