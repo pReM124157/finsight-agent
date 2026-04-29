@@ -11,6 +11,7 @@ import { valuationAgent } from "./valuation.agent.js";
 import { analyzeExitSignal } from "./exitSignal.agent.js";
 import { calculatePositionSize } from "./positionSizing.agent.js";
 import { analyzeRebalancing } from "./rebalancer.agent.js";
+import { logRecommendation, getLearningBoost } from "./performanceTracker.agent.js";
 
 import { generateInvestmentAnalysis } from "../services/claude.service.js";
 
@@ -121,9 +122,12 @@ Guidelines:
       valuationScore: valuation.score
     });
 
-    // PHASE 3: Confidence Alignment
-    // Adjusting confidence based on execution readiness to ensure internal consistency
-    let adjustedConfidence = decision.finalConfidenceScore || 5;
+    // PHASE 3: Confidence Alignment & Learning Feedback
+    const learningBoost = await getLearningBoost(ticker);
+    
+    // Adjusting confidence based on execution readiness and historical feedback
+    let adjustedConfidence = (decision.finalConfidenceScore || 5) + learningBoost;
+    
     if (entryTiming.strategy === "CAUTIOUS ENTRY") {
       adjustedConfidence = Math.min(adjustedConfidence, 6);
     } else if (entryTiming.strategy === "AVOID ENTRY") {
@@ -131,6 +135,9 @@ Guidelines:
     } else if (entryTiming.strategy === "STRONG ENTRY") {
       adjustedConfidence = Math.min(adjustedConfidence, 10);
     }
+    
+    // Ensure score stays within 1-10 range
+    adjustedConfidence = Math.min(Math.max(adjustedConfidence, 1), 10);
 
     const finalDecision = {
       ...decision,
@@ -210,6 +217,17 @@ Guidelines:
       finalDecision.finalDecision,
       entryTiming.entryUrgency
     );
+
+    // PERSISTENCE: Log recommendation for future performance tracking
+    await logRecommendation({
+      symbol: ticker,
+      decision: finalDecision.finalDecision,
+      confidence: finalDecision.finalConfidenceScore,
+      entryPrice: activePrice,
+      stopLoss: parseCurrency(entryTiming.stopLoss),
+      target: parseCurrency(entryTiming.initialTarget),
+      reasoning: finalDecision.reason
+    });
 
     return {
       risk,

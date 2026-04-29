@@ -8,9 +8,21 @@ import { scannerAgent } from "../agents/scanner.agent.js";
 
 import { sendTelegramAlert } from "../services/alert.service.js";
 import { sendEmailAlert } from "../services/email.service.js";
+import { updatePerformanceTracking } from "../agents/performanceTracker.agent.js";
 
 export const startMonitoringJob = () => {
   console.log("🚀 Monitoring Job Started");
+
+  // Daily Performance Update Loop (Midnight)
+  cron.schedule("0 0 * * *", async () => {
+    console.log("⏰ Daily Performance Update Loop Triggered");
+    try {
+      const result = await updatePerformanceTracking();
+      console.log(`✅ Performance tracking updated: ${result.updated} entries processed.`);
+    } catch (error) {
+      console.error("Performance Tracking Update Error:", error.message);
+    }
+  });
 
   /*
     Runs every hour
