@@ -20,8 +20,9 @@ export async function sendEmail({ subject, text }) {
       subject,
       text
     });
-    console.log("✅ Email alert sent successfully");
+    console.log("✅ EMAIL SENT SUCCESSFULLY TO:", process.env.TARGET_EMAIL);
   } catch (error) {
-    console.log("Email Service Error:", error.message);
+    console.error("❌ EMAIL ERROR:", error);
+    console.error("Check if EMAIL_USER and EMAIL_PASS (App Password) are correct.");
   }
 }
