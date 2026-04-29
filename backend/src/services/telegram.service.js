@@ -5,6 +5,11 @@ import { analyzePortfolio } from "../agents/portfolioAgent.js";
 import { scannerAgent } from "../agents/scanner.agent.js";
 import { sectorScannerAgent } from "../agents/sectorScanner.agent.js";
 import { analyzePortfolioHealth } from "../agents/portfolioHealth.agent.js";
+import {
+  addHolding,
+  getPortfolio,
+  removeHolding
+} from "./portfolioMemory.service.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
@@ -294,35 +299,72 @@ Not SEBI registered investment advice.
     }
 
     /**
-     * 2. Portfolio command
+     * 2. Portfolio Commands
      */
+    if (lowerText.startsWith("/add ")) {
+      const parts = text.split(/\s+/);
+      if (parts.length < 4) {
+        return bot.telegram.sendMessage(
+          chatId,
+          "Usage: /add TICKER QUANTITY PRICE\nExample: /add HDFCBANK 50 1450"
+        );
+      }
+
+      const symbol = parts[1].toUpperCase();
+      const quantity = Number(parts[2]);
+      const avgPrice = Number(parts[3]);
+
+      if (isNaN(quantity) || isNaN(avgPrice)) {
+        return bot.telegram.sendMessage(chatId, "❌ Invalid quantity or price. Please use numbers.");
+      }
+
+      try {
+        await addHolding(chatId, { symbol, quantity, avgPrice });
+        await bot.telegram.sendMessage(
+          chatId,
+          `✅ Holding Added\nStock: ${symbol}\nQuantity: ${quantity}\nAvg Buy Price: ₹${avgPrice}`
+        );
+      } catch (err) {
+        await bot.telegram.sendMessage(chatId, `❌ Error adding holding: ${err.message}`);
+      }
+      return;
+    }
+
+    if (lowerText.startsWith("/remove ")) {
+      const symbol = text.substring(8).trim().toUpperCase();
+      if (!symbol) return bot.telegram.sendMessage(chatId, "Usage: /remove TICKER");
+
+      try {
+        await removeHolding(chatId, symbol);
+        await bot.telegram.sendMessage(chatId, `✅ Removed ${symbol} from portfolio.`);
+      } catch (err) {
+        await bot.telegram.sendMessage(chatId, `❌ Error removing holding: ${err.message}`);
+      }
+      return;
+    }
+
     if (lowerText.startsWith("/portfolio")) {
       const lines = text.split("\n").slice(1);
 
-      const stocks = lines
+      let stocks = lines
         .map((line) => {
           const [symbol, allocation] = line.trim().split(" ");
-
           if (!symbol || !allocation) return null;
-
-          return {
-            symbol,
-            allocation: Number(allocation),
-          };
+          return { symbol, allocation: Number(allocation) };
         })
         .filter(Boolean);
 
+      // If no manual stocks provided, fetch from persistent storage
       if (!stocks.length) {
-        await bot.telegram.sendMessage(
-          chatId,
-          `Please provide portfolio in format:
-
-/portfolio
-tcs 40
-hdfcbank 30
-reliance 30`
-        );
-        return;
+        const dbHoldings = await getPortfolio(chatId);
+        if (!dbHoldings || dbHoldings.length === 0) {
+          await bot.telegram.sendMessage(
+            chatId,
+            `Your portfolio is empty.\nUse /add TICKER QTY PRICE to add holdings.`
+          );
+          return;
+        }
+        stocks = dbHoldings;
       }
 
       const health = await analyzePortfolioHealth(stocks);
