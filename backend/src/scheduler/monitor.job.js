@@ -31,6 +31,9 @@ export const runPortfolioMonitor = async () => {
       const exitSignal = result.exitSignal || {};
       const eventRisk = result.eventRisk || {};
       
+      // FORCED ALERT TEST: Temporarily true
+      const isUrgent = true; 
+      /*
       const isUrgent =
         exitSignal.signal === "STOP LOSS EXIT" ||
         exitSignal.signal === "FULL EXIT" ||
@@ -42,29 +45,27 @@ export const runPortfolioMonitor = async () => {
           eventRisk.riskLevel === "HIGH" &&
           eventRisk.eventType === "EARNINGS RESULT"
         );
+      */
 
       if (!isUrgent) continue;
-      
-      const alertType = exitSignal.signal || eventRisk.eventType;
+      const alertType = exitSignal.signal || eventRisk.eventType || "URGENT TEST";
       const allowed = await shouldSendAlert(
         holding.chat_id,
         holding.symbol,
         alertType
       );
       if (!allowed) continue;
-
       const message = `
 🚨 URGENT PORTFOLIO ALERT
 📈 Stock: ${holding.symbol}
 ⚠ Alert Type: ${alertType}
-🔥 Urgency: ${exitSignal.urgency || eventRisk.riskLevel}
+🔥 Urgency: ${exitSignal.urgency || eventRisk.riskLevel || "HIGH"}
 📌 Action Required:
-${exitSignal.action || eventRisk.action}
+${exitSignal.action || eventRisk.action || "Immediate review recommended."}
 🧠 Reason:
-${exitSignal.reason || eventRisk.reason}
+${exitSignal.reason || eventRisk.reason || "Forced alert test for verification."}
 ⚠ Immediate review recommended.
 `.trim();
-
       await bot.telegram.sendMessage(
         holding.chat_id,
         message
@@ -90,6 +91,9 @@ ${exitSignal.reason || eventRisk.reason}
 
 export const startMonitoringJob = () => {
   console.log("🚀 Monitoring Job Started");
+
+  // TRIGGER IMMEDIATELY FOR TEST
+  runPortfolioMonitor();
 
   // Portfolio Risk Monitor (8:00 AM)
   cron.schedule(
