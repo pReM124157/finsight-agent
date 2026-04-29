@@ -4,6 +4,7 @@ import { getCompanyOverview } from "./marketData.service.js";
 import { analyzePortfolio } from "../agents/portfolioAgent.js";
 import { scannerAgent } from "../agents/scanner.agent.js";
 import { sectorScannerAgent } from "../agents/sectorScanner.agent.js";
+import { analyzePortfolioHealth } from "../agents/portfolioHealth.agent.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
@@ -324,21 +325,23 @@ reliance 30`
         return;
       }
 
-      const result = await analyzePortfolio(stocks);
+      const health = await analyzePortfolioHealth(stocks);
 
       const message = `
-📊 Portfolio Health Score: ${result.healthScore}/10
+🏥 PORTFOLIO HEALTH
+Score: ${health.score}/10
+Status: ${health.status}
+Risk Level: ${health.riskLevel}
+Diversification: ${health.diversification}
+Concentration Risk: ${health.concentrationRisk}
 
-⚠ Dominant Sector:
-${result.dominantSector} (${result.dominantSectorWeight}%)
+📌 Advice:
+${health.action}
 
-📌 Highest Allocation:
-${result.highestStock?.symbol?.toUpperCase() || "N/A"} (${
-        result.highestStock?.normalizedAllocation || 0
-      }%)
-
-🧠 Suggested Action:
-${result.suggestion}
+📊 Stats:
+- Holdings: ${health.details.stockCount}
+- Top Weight: ${health.details.highestAllocation}
+- Unique Sectors: ${health.details.uniqueSectors}
 
 ⚠️ For educational purposes only.
 Not SEBI registered investment advice.
