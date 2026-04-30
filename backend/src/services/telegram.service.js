@@ -48,7 +48,6 @@ No analysis generated. Try again later.
         return;
     }
 
-    const entryTiming = result.entryTiming || {};
     // Use the final execution advice directly from the agent
     const executionAdvice = entryTiming?.finalExecutionAdvice || "No clear entry signal at this time. Maintain caution and monitor price action.";
 
