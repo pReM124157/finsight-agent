@@ -219,10 +219,33 @@ Guidelines:
     // Ensure score stays within 1-10 range
     adjustedConfidence = Math.min(Math.max(adjustedConfidence, 1), 10);
 
+    // PHASE 3.5: Professional Reasoning Construction
+    let professionalReasoning = "";
+    if (liveMarketData.priceSource !== "LIVE") {
+      professionalReasoning += `⚠ This analysis is based on the last available market data (${liveMarketData.priceSource}).\n`;
+      professionalReasoning += `Market is currently closed; decisions should only be executed after live confirmation during the next session.\n\n`;
+    }
+
+    const roeVal = Number(stockData.ReturnOnEquityTTM || 0) * 100;
+    const marginVal = Number(stockData.ProfitMargin || 0) * 100;
+    const pbVal = Number(stockData.PriceToBookRatio || 0);
+    const deVal = Number(stockData.DebtToEquityRatio || 0);
+
+    const roe = roeVal ? roeVal.toFixed(0) : "N/A";
+    const margin = marginVal ? marginVal.toFixed(0) : "N/A";
+    const pb = pbVal ? pbVal.toFixed(2) : "N/A";
+    const de = deVal ? deVal.toFixed(2) : "N/A";
+
+    professionalReasoning += `Fundamentally, the company shows ${roeVal > 20 ? 'strong' : 'moderate'} profitability (ROE ~${roe}%) and ${marginVal > 10 ? 'stable' : 'pressured'} margins (~${margin}%). `;
+    professionalReasoning += `However, ${pbVal > 5 ? 'elevated' : 'reasonable'} valuation (PB ~${pb}) and ${deVal > 2 ? 'high' : 'managed'} leverage (D/E ~${de}) introduce structural risk.\n\n`;
+    
+    professionalReasoning += `Technically, price action indicates ${technical.trend === 'BEARISH' ? 'weakness' : 'consolidation'} with ${technical.rsi > 60 ? 'overbought' : 'breakdown'} signals near key levels. `;
+    professionalReasoning += `Combined with fundamental factors, this supports a ${entryTiming.strategy.includes('AVOID') ? 'cautious or trimming' : 'selective'} approach, resulting in a ${decision.finalDecision || 'HOLD'} verdict.\n`;
+
     const finalDecision = {
       ...decision,
       finalConfidenceScore: adjustedConfidence,
-      reason: isDegraded ? `[STALE DATA] ${decision.reason}` : (hasMissingFundamentals ? `[PARTIAL DATA] ${decision.reason}` : decision.reason)
+      reason: professionalReasoning
     };
 
     // PHASE 4: Strategic Allocation (Portfolio, Ranking, Capital, Rebalancing)
@@ -392,6 +415,30 @@ Guidelines:
       entryTiming.finalExecutionAdvice = "Wait for data pipeline stabilization before taking action.";
     }
 
+    // PHASE 6: Forward Guidance (Next Session Plan)
+    let nextSessionPlan = null;
+    if (liveMarketData.priceSource !== "LIVE") {
+      nextSessionPlan = {
+        plan: entryStrategy === "WAIT" ? "Prepare breakout watch" : "Prepare entry",
+        action: "Execute only if levels are respected after market open",
+        entryTrigger: entryTiming.idealEntryZone || "Watch opening range",
+        stopLoss: entryTiming.stopLoss || "To be confirmed on open",
+        target: entryTiming.initialTarget || "Based on momentum",
+        note: "Use first 15-min candle confirmation before execution"
+      };
+    }
+
+    // PHASE 7: Metadata & Timestamps
+    const istTime = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+
     return {
       risk,
       portfolio,
@@ -408,7 +455,9 @@ Guidelines:
       eventRisk,
       isDegraded,
       priceSource: liveMarketData.priceSource,
-      dataAge: liveMarketData.dataAge
+      dataAge: liveMarketData.dataAge,
+      nextSessionPlan,
+      analysisTimestamp: istTime
     };
   } catch (error) {
     console.error("Master Agent Error:", error.message);

@@ -183,7 +183,7 @@ export async function getLiveMarketData(symbol) {
 
     let result = null;
     let fetchSymbol = "";
-    let priceSource = "NONE";
+    let priceSource = "FAILED";
     const isMarketOpen = checkIsMarketOpen();
 
     // 1. ATTEMPT LIVE FETCH

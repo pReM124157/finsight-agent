@@ -51,7 +51,9 @@ No analysis generated. Try again later.
     // Use the final execution advice directly from the agent
     const executionAdvice = entryTiming?.finalExecutionAdvice || "No clear entry signal at this time. Maintain caution and monitor price action.";
 
-    const message = `
+    let message = `🕒 Analysis Time (IST): ${result.analysisTimestamp}
+📊 Based on: ${result.priceSource === "LIVE" ? "Live market feed" : "Last available market data"}
+
 ${result.isDegraded ? "⚠ DEGRADED MODE — Using stale/cached market data\n" : ""}📡 Source: ${result.priceSource || "UNKNOWN"} | Age: ${result.dataAge || 0}s
 ━━━━━━━━━━━━━━━━━━
 🚨 ${result.decision?.finalDecision || "HOLD"} Signal Detected
@@ -107,11 +109,20 @@ Signal: ${exitSignal?.signal || "HOLD"}
 Urgency: ${exitSignal?.urgency || "LOW"}
 Action: ${exitSignal?.action || "Continue holding"}
 Reason: ${exitSignal?.reason || "No significant exit triggers detected"}
-
-⚠️ For educational purposes only.
-Not SEBI registered investment advice.
-Do your own research before investing.
 `.trim();
+
+    if (result.nextSessionPlan) {
+      message += `\n\n🚀 NEXT MARKET PLAN\n`;
+      message += `Plan: ${result.nextSessionPlan.plan}\n`;
+      message += `Trigger: ${result.nextSessionPlan.entryTrigger}\n`;
+      message += `Stop Loss: ${result.nextSessionPlan.stopLoss}\n`;
+      message += `Target: ${result.nextSessionPlan.target}\n`;
+      message += `Execution Rule: ${result.nextSessionPlan.action}\n`;
+    }
+
+    message += `\n\n⚠️ For educational purposes only.
+Not SEBI registered investment advice.
+Do your own research before investing.`;
 
     await bot.telegram.sendMessage(chatId, message);
   } catch (err) {
