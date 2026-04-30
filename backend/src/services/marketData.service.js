@@ -249,8 +249,8 @@ export async function getLiveMarketData(symbol) {
         }
     }
 
-    if (!currentPrice || currentPrice === 0) {
-        throw new Error(`Data pipeline exhausted for ${upperSymbol}`);
+    if (!currentPrice || currentPrice === 0 || priceSource === "NONE" || priceSource === "FAILED") {
+        throw new Error(`Critical data failure: Valid price or source could not be established for ${upperSymbol}`);
     }
 
     return {

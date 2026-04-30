@@ -30,11 +30,10 @@ export async function masterAgent(input) {
           const ticker = tickerMatch[0];
           try {
               const data = await getLiveMarketData(ticker);
-              if (data && data.currentPrice > 0) {
+              if (data && data.currentPrice > 0 && data.priceSource !== "FAILED") {
                   liveDataSnippet = `
 [LIVE MARKET DATA FOR ${ticker}]
 Current Price: ₹${data.currentPrice}
-Day Range: ₹${data.dayLow} - ₹${data.dayHigh}
 52W Range: ₹${data.fiftyTwoWeekLow} - ₹${data.fiftyTwoWeekHigh}
 Volume: ${data.volume}
 Market Cap: ${data.marketCap}
@@ -83,12 +82,38 @@ Guidelines:
     console.log("TICKER:", ticker);
     console.log("INPUT DATA KEYS:", Object.keys(stockData));
 
-    // PHASE 1: Core Analysis (Risk, Fundamentals, Technicals, Valuation)
-    console.log(`[Phase 1] Starting Core Analysis for ${ticker}...`);
-    const [risk, decision, liveMarketData, technical, valuation] = await Promise.all([
+    // Fix: Pre-declare execution variables for safety overrides
+    let entryStrategy = "WAIT";
+    let allocation = 0;
+    let capitalAction = "Blocked by execution layer";
+
+    // PHASE 1: Data Fetch & Integrity Guard
+    console.log(`[Phase 1] Fetching live market data for ${ticker}...`);
+    const liveMarketData = await getLiveMarketData(ticker);
+
+    // FINAL GLOBAL GUARD: Data Integrity Check
+    if (
+        !liveMarketData || 
+        !liveMarketData.currentPrice || 
+        liveMarketData.currentPrice === 0 || 
+        liveMarketData.priceSource === "UNKNOWN" ||
+        liveMarketData.priceSource === "FAILED" ||
+        liveMarketData.priceSource === "NONE" ||
+        liveMarketData.error
+    ) {
+        console.warn(`[GLOBAL GUARD] Data Unavailable for ${ticker}. Aborting analysis.`);
+        return {
+            status: "DATA_UNAVAILABLE",
+            message: `⚠ Data Unavailable for ${ticker} — Skipping analysis`,
+            ticker,
+            blockExecution: true
+        };
+    }
+
+    console.log(`[Phase 1.5] Proceeding with full analysis for ${ticker}...`);
+    const [risk, decision, technical, valuation] = await Promise.all([
       riskAgent(stockData),
       decisionAgent(stockData),
-      getLiveMarketData(ticker),
       technicalAgent(ticker),
       valuationAgent(stockData)
     ]);
@@ -181,7 +206,10 @@ Guidelines:
       // Normalize degraded confidence [2, 3]
       adjustedConfidence = Math.min(Math.max(adjustedConfidence, 2), 3);
       
-      entryStrategy = "WAIT"; // Ensure variable is updated if used below
+      entryStrategy = "WAIT";
+      allocation = 0;
+      capitalAction = "Blocked by execution layer";
+
       entryTiming.strategy = "WAIT";
       entryTiming.entryUrgency = "LOW";
       entryTiming.reasoning = `⚠ Critical Data Status: Analysis restricted for safety. Data source is ${liveMarketData.priceSource} and latency is ${liveMarketData.latencyBlocked ? 'BLOCKED' : 'STALE'}.`;

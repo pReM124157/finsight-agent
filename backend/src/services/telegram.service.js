@@ -33,6 +33,22 @@ async function performAnalysis(chatId, symbol) {
     const eventRisk = result.eventRisk || {};
     const ticker = symbol.toUpperCase();
 
+    if (result.status === "DATA_UNAVAILABLE") {
+        const errorMsg = `
+⚠ DATA UNAVAILABLE
+Stock: ${ticker}
+
+Reason:
+Market data could not be fetched reliably.
+
+Action:
+No analysis generated. Try again later.
+`.trim();
+        await bot.telegram.sendMessage(chatId, errorMsg);
+        return;
+    }
+
+    const entryTiming = result.entryTiming || {};
     // Use the final execution advice directly from the agent
     const executionAdvice = entryTiming?.finalExecutionAdvice || "No clear entry signal at this time. Maintain caution and monitor price action.";
 
