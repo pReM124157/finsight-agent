@@ -354,6 +354,12 @@ export async function masterAgent(input) {
         }
       }
 
+      // 1.5. Intent Detection: Acknowledgement / Closure (PRIORITY 1.5)
+      const isAcknowledgement = /^(thanks|thank you|ok|okay|got it|cool|nice|great|nothing|all good)$/i.test(userQuery.trim());
+      if (isAcknowledgement) {
+        return { response: "Got it." };
+      }
+
       // 2. Intent Detection: Vague / Open-ended (PRIORITY 2)
       const isVague = /do one task|help me|can you help|do something/i.test(userQuery);
       if (isVague) {
