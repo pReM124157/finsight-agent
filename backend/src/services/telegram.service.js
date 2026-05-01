@@ -11,6 +11,7 @@ import {
   removeHolding,
   updateHolding
 } from "./portfolioMemory.service.js";
+import { createPaymentLink } from "../routes/payment.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
@@ -97,6 +98,27 @@ Avoid impulsive entries without confirmation.`;
     );
   }
 }
+
+bot.command('pay', async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  const name = ctx.from.first_name || 'User';
+  await ctx.reply('⏳ Generating your payment link...');
+  try {
+    const paymentUrl = await createPaymentLink(chatId, name);
+    await ctx.reply(
+      `💳 *FinSight Pro*\n\n` +
+      `₹299/month\n\n` +
+      `👉 ${paymentUrl}\n\n` +
+      `✅ Access activates automatically after payment.`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (err) {
+    console.error('Payment link error:', err.message);
+    await ctx.reply(
+      `⚠️ Could not generate payment link.\nTry again in a moment.`
+    );
+  }
+});
 
 /**
  * Main message handler
