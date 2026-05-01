@@ -56,8 +56,8 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
     if (paymentId) {
       const { data: existing } = await supabase
         .from('subscribers')
-        .select('razorpay_payment_id')
-        .eq('razorpay_payment_id', paymentId)
+        .select('payment_id')
+        .eq('payment_id', paymentId)
         .maybeSingle();
 
       if (existing) {
@@ -72,7 +72,7 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
         .from('subscribers')
         .upsert({
           telegram_chat_id: chatId.toString(),
-          razorpay_payment_id: paymentId || null,
+          payment_id: paymentId || null,
           status: 'active',
           plan: 'pro',
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
