@@ -12,16 +12,89 @@ import {
   updateHolding
 } from "./portfolioMemory.service.js";
 import { createPaymentLink } from "../routes/payment.js";
+import supabase from "./supabase.service.js";
+import { isFreeLimitReached, incrementUsage, getRemainingUsage, FREE_LIMIT } from "./usage.service.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 const userStates = new Map();
 
-/**
- * Helper to perform analysis and send message
- */
+// ─────────────────────────────────────────────
+// TIER DEFINITIONS
+// ─────────────────────────────────────────────
+
+const PRO_COMMANDS = [
+  '/analyze', '/compare', '/top', '/scanner',
+  '/opportunities', '/sector', '/sectors', '/rotation',
+  '/portfolio', '/add', '/update', '/remove'
+];
+
+const PRO_KEYWORDS = [
+  'deep', 'entry', 'target', 'stop loss', 'stoploss',
+  'portfolio', 'long term', 'buy or sell', 'should i buy',
+  'should i sell', 'best entry', 'exit', 'allocation',
+  'rebalance', 'compare', 'sector', 'watchlist', 'analyse'
+];
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTION CHECK
+// ─────────────────────────────────────────────
+
+async function isSubscribed(chatId) {
+  try {
+    const { data } = await supabase
+      .from('subscribers')
+      .select('status')
+      .eq('telegram_chat_id', chatId.toString())
+      .eq('status', 'active')
+      .maybeSingle();
+    return !!data;
+  } catch (err) {
+    console.error('Subscription check failed:', err.message);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// UPSELL MESSAGE HELPERS
+// ─────────────────────────────────────────────
+
+async function sendProUpsell(ctx) {
+  await ctx.reply(
+    `🔒 *Pro Feature*\n\n` +
+    `This requires FinSight Pro.\n\n` +
+    `💎 *You'll unlock:*\n` +
+    `• Deep AI stock analysis\n` +
+    `• Entry & exit levels\n` +
+    `• Portfolio tracking\n` +
+    `• Market scanner\n` +
+    `• Sector rotation reports\n\n` +
+    `₹299/month — Cancel anytime.\n\n` +
+    `👉 Type /pay to unlock instantly`,
+    { parse_mode: 'Markdown' }
+  );
+}
+
+async function sendKeywordUpsell(ctx) {
+  await ctx.reply(
+    `🔍 You're asking for advanced analysis.\n\n` +
+    `That's part of *FinSight Pro*.\n\n` +
+    `💎 *Includes:*\n` +
+    `• Entry zones & targets\n` +
+    `• Stop-loss levels\n` +
+    `• AI-powered deep dive\n` +
+    `• Portfolio rebalancing\n\n` +
+    `👉 Unlock here: /pay`,
+    { parse_mode: 'Markdown' }
+  );
+}
+
+// ─────────────────────────────────────────────
+// ANALYSIS HELPERS
+// ─────────────────────────────────────────────
+
 async function performAnalysis(chatId, symbol) {
-  await bot.telegram.sendMessage(chatId, `Analyzing ${symbol}...`);
+  await bot.telegram.sendMessage(chatId, `🔍 Analyzing ${symbol}...`);
 
   try {
     const stockData = await getCompanyOverview(symbol);
@@ -31,25 +104,13 @@ async function performAnalysis(chatId, symbol) {
     const exitSignal = result.exitSignal || {};
     const positionSizing = result.positionSizing || {};
     const rebalancer = result.rebalancer || {};
-    const eventRisk = result.eventRisk || {};
     const ticker = symbol.toUpperCase();
 
     if (result.status === "DATA_UNAVAILABLE") {
-        const errorMsg = `
-⚠ DATA UNAVAILABLE
-Stock: ${ticker}
-
-Reason:
-Market data could not be fetched reliably.
-
-Action:
-No analysis generated. Try again later.
-`.trim();
-        await bot.telegram.sendMessage(chatId, errorMsg);
-        return;
+      await bot.telegram.sendMessage(chatId, `⚠ DATA UNAVAILABLE\nStock: ${ticker}\n\nMarket data could not be fetched reliably. Try again later.`);
+      return;
     }
 
-    // Use the final execution advice directly from the agent
     const executionAdvice = entryTiming?.finalExecutionAdvice || "No clear entry signal at this time. Maintain caution and monitor price action.";
 
     let message = `${ticker} — Snapshot
@@ -92,12 +153,54 @@ Avoid impulsive entries without confirmation.`;
 
     await bot.telegram.sendMessage(chatId, message);
   } catch (err) {
-    await bot.telegram.sendMessage(
-      chatId,
-      `❌ Error analyzing ${symbol}: ${err.message}`
-    );
+    await bot.telegram.sendMessage(chatId, `❌ Error analyzing ${symbol}: ${err.message}`);
   }
 }
+
+async function performBasicOverview(chatId, symbol) {
+  await bot.telegram.sendMessage(chatId, `📊 Fetching basic overview for ${symbol}...`);
+  try {
+    const stockData = await getCompanyOverview(symbol);
+    const result = await masterAgent(stockData);
+    const ticker = symbol.toUpperCase();
+
+    const message =
+      `📊 *Basic Overview — ${ticker}*\n\n` +
+      `Signal: ${result.decision?.finalDecision || 'HOLD'}\n` +
+      `Confidence: ${result.decision?.finalConfidenceScore || 0}/10\n` +
+      `Risk Level: ${result.risk?.riskLevel || 'N/A'}\n` +
+      `Market Trend: ${result.decision?.finalDecision === 'BUY' ? 'Bullish' : result.decision?.finalDecision === 'SELL' ? 'Bearish' : 'Range-bound'}\n\n` +
+      `⚠️ *Want entry points, targets & deep analysis?*\n` +
+      `👉 Upgrade to Pro: /pay`;
+
+    await bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  } catch (err) {
+    await bot.telegram.sendMessage(chatId, `❌ Could not fetch overview for ${symbol}.`);
+  }
+}
+
+// ─────────────────────────────────────────────
+// FREE COMMANDS (no gate)
+// ─────────────────────────────────────────────
+
+bot.command('start', async (ctx) => {
+  await ctx.reply(
+    `👋 Welcome to *FinSight AI*!\n\n` +
+    `I'm your institutional-grade stock analysis assistant.\n\n` +
+    `📊 *Free features:*\n` +
+    `• Basic stock overview\n` +
+    `• Market trend (up/down)\n` +
+    `• Simple metrics\n\n` +
+    `💎 *FinSight Pro includes:*\n` +
+    `• Deep AI analysis\n` +
+    `• Entry & exit levels\n` +
+    `• Portfolio tracking\n` +
+    `• Market scanner\n\n` +
+    `Type /help to see all commands.\n` +
+    `Type /pay to unlock Pro.`,
+    { parse_mode: 'Markdown' }
+  );
+});
 
 bot.command('pay', async (ctx) => {
   const chatId = ctx.chat.id.toString();
@@ -114,157 +217,141 @@ bot.command('pay', async (ctx) => {
     );
   } catch (err) {
     console.error('Payment link error:', err.message);
-    await ctx.reply(
-      `⚠️ Could not generate payment link.\nTry again in a moment.`
-    );
+    await ctx.reply(`⚠️ Could not generate payment link.\nTry again in a moment.`);
   }
 });
 
-/**
- * Main message handler
- */
+// ─────────────────────────────────────────────
+// MAIN MESSAGE HANDLER
+// ─────────────────────────────────────────────
+
 bot.on("text", async (ctx) => {
   try {
     const chatId = ctx.chat.id;
     console.log("CHAT ID:", chatId);
     const text = ctx.message.text?.trim() || "";
-
     if (!text) return;
 
     const lowerText = text.toLowerCase();
+    const subscribed = await isSubscribed(chatId);
 
-    if (lowerText === "/help") {
-      await bot.telegram.sendMessage(
-        chatId,
-        `🏦 Finsight AI — Institutional Terminal
-━━━━━━━━━━━━━━━━━━
-🔍 ANALYSIS
-• /analyze <TICKER> — Deep-dive multi-agent report
-• /quick <TICKER> — ⚡ Fast verdict & summary
-• /compare <T1> <T2> — ⚖️ Side-by-side comparison
-
-💼 PORTFOLIO
-• /portfolio — 🏥 Health report & rebalancing
-• /add <T> <Q> <P> — ➕ Add holding (e.g. /add TCS 50 3400)
-• /update <T> <Q> <P> — 🔄 Synchronize holding
-• /remove <T> — 🗑 Remove from saved portfolio
-
-🏆 DISCOVERY
-• /top — 🚀 Rank top market opportunities
-• /sector — 📊 Institutional sector rotation report
-
-━━━━━━━━━━━━━━━━━━
-⚠️ Educational purposes only.
-Not SEBI registered investment advice.`
-      );
-      return;
-    }
-
-    if (lowerText.startsWith("/quick ")) {
-      const ticker = text.substring(7).trim();
-      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
+    // Free usage limit gate — skip for Pro users
+    if (!subscribed) {
+      const limitReached = await isFreeLimitReached(chatId);
+      if (limitReached) {
+        await ctx.reply(
+          `🚫 *Free Limit Reached*\n\n` +
+          `You've used all ${FREE_LIMIT} free requests.\n\n` +
+          `Unlock unlimited access with FinSight Pro:\n` +
+          `👉 /pay`,
+          { parse_mode: 'Markdown' }
         );
         return;
       }
+    }
+
+    // ── /help ──────────────────────────────────
+    if (lowerText === "/help") {
+      const proTag = subscribed ? '✅ Pro' : '🔒 Pro';
       await bot.telegram.sendMessage(
         chatId,
-        `⚡ Quick scan: ${ticker}...`
+        `🏦 *Finsight AI — Command Menu*\n` +
+        `━━━━━━━━━━━━━━━━━━\n\n` +
+        `🆓 *Free Commands:*\n` +
+        `• /analyze <TICKER> — Basic overview\n` +
+        `• /quick <TICKER> — Quick trend check\n` +
+        `• /start — Welcome info\n` +
+        `• /pay — Unlock Pro\n\n` +
+        `${proTag} *Commands:*\n` +
+        `• /analyze <TICKER> — Full deep-dive report\n` +
+        `• /compare <T1> <T2> — Side-by-side comparison\n` +
+        `• /top — 🚀 Top market opportunities\n` +
+        `• /sector — 📊 Sector rotation report\n` +
+        `• /portfolio — 🏥 Portfolio health\n` +
+        `• /add <T> <Q> <P> — Add holding\n` +
+        `• /update <T> <Q> <P> — Update holding\n` +
+        `• /remove <T> — Remove holding\n\n` +
+        `━━━━━━━━━━━━━━━━━━\n` +
+        `⚠️ Educational purposes only. Not SEBI registered advice.`,
+        { parse_mode: 'Markdown' }
       );
+      return;
+    }
+
+    // ── /quick (Free) ──────────────────────────
+    if (lowerText.startsWith("/quick ")) {
+      const ticker = text.substring(7).trim();
+      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
+        await bot.telegram.sendMessage(chatId, "Please enter a valid ticker like TCS, RELIANCE, INFY");
+        return;
+      }
+      await bot.telegram.sendMessage(chatId, `⚡ Quick scan: ${ticker}...`);
       try {
         const stockData = await getCompanyOverview(ticker);
         const result = await masterAgent(stockData);
-        const message = `
-⚡ QUICK VERDICT
-📈 Stock: ${ticker.toUpperCase()}
-📊 Verdict: ${result.decision?.finalDecision || "HOLD"}
-🎯 Confidence: ${result.decision?.finalConfidenceScore || 0}/10
-⚠ Risk Level: ${result.risk?.riskLevel || "N/A"}
-📝 Summary:
-${result.decision?.reason || "No summary available"}
-📌 Suggested Action:
-${result.rebalancing?.action || "Monitor closely"}
-For full report:
-${"/analyze " + ticker}
-⚠️ Educational only.
-Not SEBI registered investment advice.
-`.trim();
-        await bot.telegram.sendMessage(chatId, message);
+        const left = subscribed ? null : await getRemainingUsage(chatId);
+        const counterLine = subscribed ? '' : `\n🆓 Free requests left: ${Math.max(0, left - 1)}/${FREE_LIMIT}`;
+        const message =
+          `⚡ *QUICK VERDICT — ${ticker.toUpperCase()}*\n\n` +
+          `📊 Verdict: ${result.decision?.finalDecision || "HOLD"}\n` +
+          `🎯 Confidence: ${result.decision?.finalConfidenceScore || 0}/10\n` +
+          `⚠ Risk Level: ${result.risk?.riskLevel || "N/A"}\n\n` +
+          `📝 Summary:\n${result.decision?.reason || "No summary available"}\n\n` +
+          (subscribed
+            ? `📌 For full report: /analyze ${ticker}`
+            : `🔒 Full report (entry zones, targets, stop loss) → /pay`) +
+          counterLine;
+        await bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        if (!subscribed) await incrementUsage(chatId);
       } catch (error) {
-        await bot.telegram.sendMessage(
-          chatId,
-          `❌ Could not analyze ${ticker}`
-        );
+        await bot.telegram.sendMessage(chatId, `❌ Could not analyze ${ticker}`);
       }
       return;
     }
 
+    // ── PRO: /compare ──────────────────────────
     if (lowerText.startsWith("/compare ")) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
       const parts = text.split(" ");
       if (parts.length < 3) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "Please provide two stock tickers.\nExample: /compare TCS.NS INFY.NS"
-        );
+        await bot.telegram.sendMessage(chatId, "Example: /compare TCS INFY");
         return;
       }
       const ticker1 = parts[1].trim();
       const ticker2 = parts[2].trim();
-      await bot.telegram.sendMessage(
-        chatId,
-        `⚖ Comparing ${ticker1} vs ${ticker2}...`
-      );
+      await bot.telegram.sendMessage(chatId, `⚖ Comparing ${ticker1} vs ${ticker2}...`);
       try {
-        const stock1 = await getCompanyOverview(ticker1);
-        const stock2 = await getCompanyOverview(ticker2);
-        const result1 = await masterAgent(stock1);
-        const result2 = await masterAgent(stock2);
+        const [stock1, stock2] = await Promise.all([getCompanyOverview(ticker1), getCompanyOverview(ticker2)]);
+        const [result1, result2] = await Promise.all([masterAgent(stock1), masterAgent(stock2)]);
         const score1 = result1.decision.finalConfidenceScore;
         const score2 = result2.decision.finalConfidenceScore;
-        const winner =
-          score1 >= score2
-            ? ticker1.toUpperCase()
-            : ticker2.toUpperCase();
-        const message = `
-⚖ STOCK COMPARISON
-📈 ${ticker1.toUpperCase()}
-Verdict: ${result1.decision?.finalDecision || "HOLD"}
-Confidence: ${score1 || 0}/10
-Risk: ${result1.risk?.riskLevel || "N/A"}
-📈 ${ticker2.toUpperCase()}
-Verdict: ${result2.decision?.finalDecision || "HOLD"}
-Confidence: ${score2 || 0}/10
-Risk: ${result2.risk?.riskLevel || "N/A"}
-🏆 Better Opportunity:
-${winner}
-⚠️ Educational only.
-Not SEBI registered investment advice.
-`.trim();
-        await bot.telegram.sendMessage(chatId, message);
+        const winner = score1 >= score2 ? ticker1.toUpperCase() : ticker2.toUpperCase();
+        const message =
+          `⚖ *STOCK COMPARISON*\n\n` +
+          `📈 *${ticker1.toUpperCase()}*\n` +
+          `Verdict: ${result1.decision?.finalDecision || "HOLD"}\n` +
+          `Confidence: ${score1 || 0}/10\n` +
+          `Risk: ${result1.risk?.riskLevel || "N/A"}\n\n` +
+          `📈 *${ticker2.toUpperCase()}*\n` +
+          `Verdict: ${result2.decision?.finalDecision || "HOLD"}\n` +
+          `Confidence: ${score2 || 0}/10\n` +
+          `Risk: ${result2.risk?.riskLevel || "N/A"}\n\n` +
+          `🏆 Better Opportunity: *${winner}*\n\n` +
+          `⚠️ Educational only. Not SEBI advice.`;
+        await bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
       } catch (error) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "❌ Comparison failed. Please check ticker symbols."
-        );
+        await bot.telegram.sendMessage(chatId, "❌ Comparison failed. Please check ticker symbols.");
       }
       return;
     }
 
-    if (text.toLowerCase() === "/scanner" || 
-        text.toLowerCase() === "/top" || 
-        text.toLowerCase() === "/opportunities") {
-      await bot.telegram.sendMessage(
-        chatId,
-        "🔍 Running Institutional Scanner...\nPlease wait while FinSight analyzes top opportunities."
-      );
+    // ── PRO: /top /scanner /opportunities ─────
+    if (["/scanner", "/top", "/opportunities"].includes(lowerText)) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
+      await bot.telegram.sendMessage(chatId, "🔍 Running Institutional Scanner...\nPlease wait.");
       const opportunities = await scannerAgent();
       if (!opportunities || !opportunities.length) {
-        return await bot.telegram.sendMessage(
-          chatId,
-          "No strong opportunities found right now. Please try again later."
-        );
+        return await bot.telegram.sendMessage(chatId, "No strong opportunities found right now. Try again later.");
       }
       let message = "🏆 TOP OPPORTUNITIES TODAY\n\n";
       opportunities.forEach((stock, index) => {
@@ -279,87 +366,62 @@ Not SEBI registered investment advice.
         message += `🧠 Reason:\n${stock.entryReasoning}\n`;
         message += `📌 Advice:\n${stock.finalExecutionAdvice}\n\n`;
       });
-      message += "⚠️ For educational purposes only.\n";
-      message += "Not SEBI registered investment advice.";
+      message += "⚠️ For educational purposes only.\nNot SEBI registered investment advice.";
       return await bot.telegram.sendMessage(chatId, message);
     }
 
-    if (
-      text.toLowerCase() === "/sector" ||
-      text.toLowerCase() === "/sectors" ||
-      text.toLowerCase() === "/rotation"
-    ) {
-      await bot.telegram.sendMessage(
-        chatId,
-        "📊 Running Sector Rotation Scanner...\nAnalyzing strongest sectors now..."
-      );
+    // ── PRO: /sector /sectors /rotation ───────
+    if (["/sector", "/sectors", "/rotation"].includes(lowerText)) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
+      await bot.telegram.sendMessage(chatId, "📊 Running Sector Rotation Scanner...");
       const sectors = await sectorScannerAgent();
       if (!sectors.length) {
-        return await bot.telegram.sendMessage(
-          chatId,
-          "No sector strength data available right now."
-        );
+        return await bot.telegram.sendMessage(chatId, "No sector strength data available right now.");
       }
       let message = "📊 SECTOR ROTATION REPORT\n\n";
       sectors.slice(0, 5).forEach((item, index) => {
         message += `#${index + 1} ${item.sector}\n`;
         message += `🏆 Strength Score: ${item.avgScore}/10\n\n`;
       });
-      message += "⚠️ For educational purposes only.\n";
-      message += "Not SEBI registered investment advice.";
+      message += "⚠️ For educational purposes only.\nNot SEBI registered investment advice.";
       return await bot.telegram.sendMessage(chatId, message);
     }
 
-    /**
-     * 1. Waiting state for stock input
-     */
+    // ── Awaiting stock input ───────────────────
     if (userStates.get(chatId) === "AWAITING_STOCK") {
       userStates.delete(chatId);
-      
       const ticker = text.trim().toUpperCase();
       if (ticker.includes(" ") || ticker.length > 15) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
-        );
+        await bot.telegram.sendMessage(chatId, "Please enter a valid stock ticker like TCS, RELIANCE, INFY");
         return;
       }
-      
-      await performAnalysis(chatId, text);
+      if (subscribed) {
+        await performAnalysis(chatId, text);
+      } else {
+        await performBasicOverview(chatId, ticker);
+        await incrementUsage(chatId);
+      }
       return;
     }
 
-    /**
-     * 2. Portfolio Commands
-     */
+    // ── PRO: Portfolio Commands ────────────────
     if (lowerText.startsWith("/add ")) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
       const parts = text.split(/\s+/);
       if (parts.length < 4) {
-        return bot.telegram.sendMessage(
-          chatId,
-          "Usage: /add TICKER QUANTITY PRICE\nExample: /add HDFCBANK 50 1450"
-        );
+        return bot.telegram.sendMessage(chatId, "Usage: /add TICKER QUANTITY PRICE\nExample: /add HDFCBANK 50 1450");
       }
-
       const symbol = parts[1].toUpperCase();
       const quantity = Number(parts[2]);
       const avgPrice = Number(parts[3]);
-
       if (isNaN(quantity) || isNaN(avgPrice)) {
         return bot.telegram.sendMessage(chatId, "❌ Invalid quantity or price. Please use numbers.");
       }
-
       try {
         await addHolding(chatId, { symbol, quantity, avgPrice });
         await bot.telegram.sendMessage(
           chatId,
-          `✅ Holding Added Successfully
-📈 Stock: ${symbol.toUpperCase()}
-📦 Quantity: ${quantity}
-💰 Average Buy Price: ₹${avgPrice}
-📊 Total Invested: ₹${Number(quantity) * Number(avgPrice)}
-Your portfolio has been updated successfully.
-Use /portfolio to view full portfolio health.`
+          `✅ Holding Added Successfully\n📈 Stock: ${symbol}\n📦 Quantity: ${quantity}\n💰 Avg Buy Price: ₹${avgPrice}\n📊 Total Invested: ₹${quantity * avgPrice}\n\nUse /portfolio to view full health.`
         );
       } catch (err) {
         await bot.telegram.sendMessage(chatId, `❌ Error adding holding: ${err.message}`);
@@ -368,36 +430,22 @@ Use /portfolio to view full portfolio health.`
     }
 
     if (lowerText.startsWith("/update ")) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
       const parts = text.split(/\s+/);
       if (parts.length < 4) {
-        return bot.telegram.sendMessage(
-          chatId,
-          "Usage: /update TICKER QUANTITY PRICE\nExample: /update HDFCBANK 80 1425"
-        );
+        return bot.telegram.sendMessage(chatId, "Usage: /update TICKER QUANTITY PRICE\nExample: /update HDFCBANK 80 1425");
       }
-
       const symbol = parts[1].toUpperCase();
       const quantity = Number(parts[2]);
       const avgPrice = Number(parts[3]);
-
       if (isNaN(quantity) || isNaN(avgPrice)) {
         return bot.telegram.sendMessage(chatId, "❌ Invalid quantity or price. Please use numbers.");
       }
-
       try {
-        await updateHolding(chatId, symbol, { 
-          quantity, 
-          avg_price: avgPrice,
-          updated_at: new Date()
-        });
+        await updateHolding(chatId, symbol, { quantity, avg_price: avgPrice, updated_at: new Date() });
         await bot.telegram.sendMessage(
           chatId,
-          `🔄 Holding Updated
-📈 Stock: ${symbol.toUpperCase()}
-📦 New Quantity: ${quantity}
-💰 New Avg Price: ₹${avgPrice}
-📊 New Total Invested: ₹${Number(quantity) * Number(avgPrice)}
-Your portfolio has been synchronized.`
+          `🔄 Holding Updated\n📈 Stock: ${symbol}\n📦 New Quantity: ${quantity}\n💰 New Avg Price: ₹${avgPrice}\n📊 New Total Invested: ₹${quantity * avgPrice}`
         );
       } catch (err) {
         await bot.telegram.sendMessage(chatId, `❌ Error updating holding: ${err.message}`);
@@ -406,17 +454,12 @@ Your portfolio has been synchronized.`
     }
 
     if (lowerText.startsWith("/remove ")) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
       const symbol = text.substring(8).trim().toUpperCase();
       if (!symbol) return bot.telegram.sendMessage(chatId, "Usage: /remove TICKER");
-
       try {
         await removeHolding(chatId, symbol);
-        await bot.telegram.sendMessage(
-          chatId,
-          `🗑 Holding Removed
-📈 Stock: ${symbol.toUpperCase()}
-The stock has been removed from your saved portfolio.`
-        );
+        await bot.telegram.sendMessage(chatId, `🗑 ${symbol} removed from your portfolio.`);
       } catch (err) {
         await bot.telegram.sendMessage(chatId, `❌ Error removing holding: ${err.message}`);
       }
@@ -424,8 +467,8 @@ The stock has been removed from your saved portfolio.`
     }
 
     if (lowerText.startsWith("/portfolio")) {
+      if (!subscribed) { await sendProUpsell(ctx); return; }
       const lines = text.split("\n").slice(1);
-
       let stocks = lines
         .map((line) => {
           const [symbol, allocation] = line.trim().split(" ");
@@ -434,140 +477,107 @@ The stock has been removed from your saved portfolio.`
         })
         .filter(Boolean);
 
-      // If no manual stocks provided, fetch from persistent storage
       if (!stocks.length) {
         const dbHoldings = await getPortfolio(chatId);
         if (!dbHoldings || dbHoldings.length === 0) {
-          await bot.telegram.sendMessage(
-            chatId,
-            `Your portfolio is empty.\nUse /add TICKER QTY PRICE to add holdings.`
-          );
+          await bot.telegram.sendMessage(chatId, `Your portfolio is empty.\nUse /add TICKER QTY PRICE to add holdings.`);
           return;
         }
         stocks = dbHoldings;
       }
 
       const health = await analyzePortfolioHealth(stocks);
-
-      const message = `
-🏥 PORTFOLIO HEALTH REPORT
-━━━━━━━━━━━━━━━━━━
-📊 Health Score: ${health.score}/10
-🏅 Status: ${health.status}
-⚠️ Risk Level: ${health.riskLevel}
-🌐 Diversification: ${health.diversification}
-⚖️ Concentration: ${health.concentrationRisk}
-
-🧠 Institutional Advice:
-${health.action}
-
-📈 Portfolio Stats:
-• Holdings: ${health.details.stockCount} Stocks
-• Max Weight: ${health.details.highestAllocation}
-• Sector Mix: ${health.details.uniqueSectors} Sectors
-
-Use /analyze <TICKER> for deep dive on any holding.
-━━━━━━━━━━━━━━━━━━
-⚠️ Educational purposes only.
-`.trim();
-
+      const message =
+        `🏥 PORTFOLIO HEALTH REPORT\n━━━━━━━━━━━━━━━━━━\n` +
+        `📊 Health Score: ${health.score}/10\n` +
+        `🏅 Status: ${health.status}\n` +
+        `⚠️ Risk Level: ${health.riskLevel}\n` +
+        `🌐 Diversification: ${health.diversification}\n` +
+        `⚖️ Concentration: ${health.concentrationRisk}\n\n` +
+        `🧠 Institutional Advice:\n${health.action}\n\n` +
+        `📈 Portfolio Stats:\n` +
+        `• Holdings: ${health.details.stockCount} Stocks\n` +
+        `• Max Weight: ${health.details.highestAllocation}\n` +
+        `• Sector Mix: ${health.details.uniqueSectors} Sectors\n\n` +
+        `Use /analyze <TICKER> for deep dive on any holding.\n━━━━━━━━━━━━━━━━━━\n` +
+        `⚠️ Educational purposes only.`;
       await bot.telegram.sendMessage(chatId, message);
       return;
     }
 
-    /**
-     * 3. Analyze commands
-     */
+    // ── /analyze (tiered) ─────────────────────
     if (lowerText === "analyze" || lowerText === "/analyze") {
       userStates.set(chatId, "AWAITING_STOCK");
-
-      await bot.telegram.sendMessage(
-        chatId,
-        "Please enter the stock/company name"
-      );
+      await bot.telegram.sendMessage(chatId, "Please enter the stock ticker (e.g. TCS, RELIANCE)");
       return;
     }
 
-    if (lowerText.startsWith("analyze ")) {
-      const ticker = text.substring(8).trim();
+    if (lowerText.startsWith("analyze ") || lowerText.startsWith("/analyze ")) {
+      const ticker = lowerText.startsWith("/analyze ")
+        ? text.substring(9).trim()
+        : text.substring(8).trim();
 
       if (!ticker || ticker.includes(" ") || ticker.length > 15) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
-        );
+        await bot.telegram.sendMessage(chatId, "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK");
         return;
       }
 
-      await performAnalysis(chatId, ticker);
-      return;
-    }
-
-    if (lowerText.startsWith("/analyze ")) {
-      const ticker = text.substring(9).trim();
-
-      if (!ticker || ticker.includes(" ") || ticker.length > 15) {
-        await bot.telegram.sendMessage(
-          chatId,
-          "Please enter a valid stock ticker like TCS, RELIANCE, INFY, HDFCBANK"
-        );
-        return;
+      if (subscribed) {
+        await performAnalysis(chatId, ticker);
+      } else {
+        await performBasicOverview(chatId, ticker);
+        await incrementUsage(chatId);
       }
-
-      await performAnalysis(chatId, ticker);
       return;
     }
 
-    /**
-     * Conversational AI Fallback
-     * If message is not a command, handle like a financial assistant
-     */
+    // ── Conversational AI Fallback (tiered) ───
+    // Check for pro keywords BEFORE running AI
+    const wantsPro = PRO_KEYWORDS.some(k => lowerText.includes(k));
+    if (!subscribed && wantsPro) {
+      await sendKeywordUpsell(ctx);
+      return;
+    }
+
     let contextualQuery = text;
-    // Check if user replied to a previous bot message
-    if (ctx.message.reply_to_message && ctx.message.reply_to_message.text) {
-      const repliedText = ctx.message.reply_to_message.text;
-      contextualQuery = `
-Previous Context:
-${repliedText}
-
-User Follow-up:
-${text}
-      `.trim();
+    if (ctx.message.reply_to_message?.text) {
+      contextualQuery = `Previous Context:\n${ctx.message.reply_to_message.text}\n\nUser Follow-up:\n${text}`.trim();
     }
 
-    const aiResponse = await masterAgent({
-      userQuery: contextualQuery,
-      mode: "conversation"
-    });
+    const aiResponse = await masterAgent({ userQuery: contextualQuery, mode: "conversation" });
 
     const needsDisclaimer =
-      text.toLowerCase().includes("buy") ||
-      text.toLowerCase().includes("invest") ||
-      text.toLowerCase().includes("stock") ||
-      text.toLowerCase().includes("portfolio") ||
-      text.toLowerCase().includes("money") ||
-      text.toLowerCase().includes("market");
+      lowerText.includes("buy") || lowerText.includes("invest") ||
+      lowerText.includes("stock") || lowerText.includes("portfolio") ||
+      lowerText.includes("money") || lowerText.includes("market");
 
-    const finalMessage = needsDisclaimer
-      ? `${aiResponse.response}
-⚠️ For educational purposes only.
-Not SEBI registered investment advice.
-Do your own research before investing.`
+    let finalMessage = needsDisclaimer
+      ? `${aiResponse.response}\n\n⚠️ For educational purposes only.\nNot SEBI registered investment advice.`
       : aiResponse.response;
 
-    await bot.telegram.sendMessage(chatId, finalMessage);
+    // Append upgrade prompt + usage counter for free users
+    if (!subscribed) {
+      const left = await getRemainingUsage(chatId);
+      finalMessage += `\n\n💎 *Want deeper analysis?* → /pay`;
+      finalMessage += `\n🆓 Free requests left: ${Math.max(0, left - 1)}/${FREE_LIMIT}`;
+      await bot.telegram.sendMessage(chatId, finalMessage, { parse_mode: 'Markdown' });
+      await incrementUsage(chatId);
+      return;
+    }
+
+    await bot.telegram.sendMessage(chatId, finalMessage, { parse_mode: 'Markdown' });
     return;
+
   } catch (error) {
-
     console.error("Telegram Bot Error:", error);
-
     await ctx.reply("❌ Error while processing your request.");
   }
 });
 
-/**
- * Start bot
- */
+// ─────────────────────────────────────────────
+// START BOT
+// ─────────────────────────────────────────────
+
 export const startBot = () => {
   bot.launch().catch((err) => {
     if (err.response && err.response.error_code === 409) {
