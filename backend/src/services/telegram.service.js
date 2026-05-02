@@ -362,6 +362,8 @@ bot.on("text", async (ctx) => {
       }
     }
 
+    const displayedUsage = skipUsage ? usageCount : usageCount + 1;
+
     // ── /help ──────────────────────────────────
     if (lowerText === "/help") {
       await bot.telegram.sendMessage(
@@ -395,7 +397,7 @@ bot.on("text", async (ctx) => {
       try {
         const stockData = await getCompanyOverview(ticker);
         const result = await masterAgent(stockData);
-        const counterLine = subscribed ? '' : getFreeUserFooter(usageCount, true);
+        const counterLine = subscribed ? '' : getFreeUserFooter(displayedUsage, true);
         const message =
           `⚡ *QUICK VERDICT — ${ticker.toUpperCase()}*\n\n` +
           `📊 Verdict: ${result.decision?.finalDecision || "HOLD"}\n` +
@@ -439,7 +441,7 @@ bot.on("text", async (ctx) => {
           `Risk: ${result2.risk?.riskLevel || "N/A"}\n\n` +
           `🏆 Better Opportunity: *${winner}*\n\n` +
           `⚠️ Educational only. Not SEBI advice.`;
-        if (!subscribed) message += getFreeUserFooter(usageCount, true);
+        if (!subscribed) message += getFreeUserFooter(displayedUsage, true);
         await bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
         if (!subscribed && !skipUsage) await incrementUsage(chatId);
       } catch (error) {
@@ -469,7 +471,7 @@ bot.on("text", async (ctx) => {
         message += `📌 Advice:\n${stock.finalExecutionAdvice}\n\n`;
       });
       message += "⚠️ For educational purposes only.\nNot SEBI registered investment advice.";
-      if (!subscribed) message += getFreeUserFooter(usageCount, true);
+      if (!subscribed) message += getFreeUserFooter(displayedUsage, true);
       await bot.telegram.sendMessage(chatId, message);
       if (!subscribed && !skipUsage) await incrementUsage(chatId);
       return;
@@ -488,7 +490,7 @@ bot.on("text", async (ctx) => {
         message += `🏆 Strength Score: ${item.avgScore}/10\n\n`;
       });
       message += "⚠️ For educational purposes only.\nNot SEBI registered investment advice.";
-      if (!subscribed) message += getFreeUserFooter(usageCount, true);
+      if (!subscribed) message += getFreeUserFooter(displayedUsage, true);
       await bot.telegram.sendMessage(chatId, message);
       if (!subscribed && !skipUsage) await incrementUsage(chatId);
       return;
@@ -502,7 +504,7 @@ bot.on("text", async (ctx) => {
         await bot.telegram.sendMessage(chatId, "Please enter a valid stock ticker like TCS, RELIANCE, INFY");
         return;
       }
-      await performAnalysis(chatId, text, !subscribed ? getFreeUserFooter(usageCount, true) : "");
+      await performAnalysis(chatId, text, !subscribed ? getFreeUserFooter(displayedUsage, true) : "");
       if (!subscribed && !skipUsage) await incrementUsage(chatId);
       return;
     }
@@ -522,7 +524,7 @@ bot.on("text", async (ctx) => {
       try {
         await addHolding(chatId, { symbol, quantity, avgPrice });
         let msg = `✅ Holding Added Successfully\n📈 Stock: ${symbol}\n📦 Quantity: ${quantity}\n💰 Avg Buy Price: ₹${avgPrice}\n📊 Total Invested: ₹${quantity * avgPrice}\n\nUse /portfolio to view full health.`;
-        if (!subscribed) msg += getFreeUserFooter(usageCount, true);
+        if (!subscribed) msg += getFreeUserFooter(displayedUsage, true);
         await bot.telegram.sendMessage(chatId, msg);
         if (!subscribed && !skipUsage) await incrementUsage(chatId);
       } catch (err) {
@@ -545,7 +547,7 @@ bot.on("text", async (ctx) => {
       try {
         await updateHolding(chatId, symbol, { quantity, avg_price: avgPrice, updated_at: new Date() });
         let msg = `🔄 Holding Updated\n📈 Stock: ${symbol}\n📦 New Quantity: ${quantity}\n💰 New Avg Price: ₹${avgPrice}\n📊 New Total Invested: ₹${quantity * avgPrice}`;
-        if (!subscribed) msg += getFreeUserFooter(usageCount, true);
+        if (!subscribed) msg += getFreeUserFooter(displayedUsage, true);
         await bot.telegram.sendMessage(chatId, msg);
         if (!subscribed && !skipUsage) await incrementUsage(chatId);
       } catch (err) {
@@ -560,7 +562,7 @@ bot.on("text", async (ctx) => {
       try {
         await removeHolding(chatId, symbol);
         let msg = `🗑 ${symbol} removed from your portfolio.`;
-        if (!subscribed) msg += getFreeUserFooter(usageCount);
+        if (!subscribed) msg += getFreeUserFooter(displayedUsage);
         await bot.telegram.sendMessage(chatId, msg);
         if (!subscribed && !skipUsage) await incrementUsage(chatId);
       } catch (err) {
@@ -603,7 +605,7 @@ bot.on("text", async (ctx) => {
         `• Sector Mix: ${health.details.uniqueSectors} Sectors\n\n` +
         `Use /analyze <TICKER> for deep dive on any holding.\n━━━━━━━━━━━━━━━━━━\n` +
         `⚠️ Educational purposes only.`;
-      if (!subscribed) message += getFreeUserFooter(usageCount, true);
+      if (!subscribed) message += getFreeUserFooter(displayedUsage, true);
       await bot.telegram.sendMessage(chatId, message);
       if (!subscribed && !skipUsage) await incrementUsage(chatId);
       return;
@@ -658,7 +660,7 @@ bot.on("text", async (ctx) => {
     }
 
     if (tickerToAnalyze) {
-      await performAnalysis(chatId, tickerToAnalyze, !subscribed ? getFreeUserFooter(usageCount, true) : "");
+      await performAnalysis(chatId, tickerToAnalyze, !subscribed ? getFreeUserFooter(displayedUsage, true) : "");
       if (!subscribed && !skipUsage) await incrementUsage(chatId);
       return;
     }
@@ -711,7 +713,7 @@ bot.on("text", async (ctx) => {
     // Fetch trial status for messaging
     // Append upgrade prompt + usage counter for free users
     if (!subscribed) {
-      finalMessage += getFreeUserFooter(usageCount);
+      finalMessage += getFreeUserFooter(displayedUsage);
     }
     
     await bot.telegram.sendMessage(chatId, finalMessage, { parse_mode: 'Markdown' });
