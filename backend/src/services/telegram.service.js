@@ -52,9 +52,9 @@ function getFreeUserFooter(usageCount, isHighIntent = false) {
   const remaining = 10 - usageCount;
   
   if (usageCount >= 8 && usageCount < 10) {
-    footer += `\n\n⚠️ ${remaining} request${remaining === 1 ? '' : 's'} left.\nYou're hitting your limit.\nMost users upgrade here to keep tracking markets without interruption.\n👉 /subscribe`;
+    footer += `\n\n⚠️ ${remaining} request${remaining === 1 ? '' : 's'} left.\nYou're in the middle of tracking something important.\nStopping here breaks the edge. Most users upgrade at this point to stay consistent.\n👉 /subscribe`;
   } else if (isHighIntent) {
-    footer += `\n\n💎 If you're actively tracking markets, Pro gives you uninterrupted access.\n👉 /subscribe`;
+    footer += `\n\n💎 Most users tracking multiple stocks switch to Pro.\nIt removes interruptions.\n👉 /subscribe`;
   } else {
     footer += `\n💎 Upgrade for unlimited:\n👉 /subscribe`;
   }

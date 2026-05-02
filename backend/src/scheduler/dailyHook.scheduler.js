@@ -19,11 +19,10 @@ export function startDailyHook() {
       if (!users) return;
 
       const message = `
-📊 Market Setup Today:
-• Nifty trend: Neutral
-• Key sector: IT / Banking
-• Watch: TCS, HDFC
-Want a quick trade idea?
+📊 Something moved today:
+TCS just showed unusual strength in IT.
+This is where smart money is rotating.
+Want to see if it's a real opportunity or noise?
 `.trim();
 
       for (const user of users) {

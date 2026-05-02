@@ -24,11 +24,13 @@ app.listen(PORT, "0.0.0.0", () => {
       const { startPortfolioScheduler } = await import("./scheduler/portfolio.scheduler.js");
       const { startMonitoringJob } = await import("./scheduler/monitor.job.js");
       const { startDailyHook } = await import("./scheduler/dailyHook.scheduler.js");
+      const { startSpikeHook } = await import("./scheduler/spikeHook.scheduler.js");
 
       startBot();
       startPortfolioScheduler();
       startMonitoringJob();
       startDailyHook();
+      startSpikeHook();
       
       console.log("🚀 All background services initialized.");
     } catch (error) {
