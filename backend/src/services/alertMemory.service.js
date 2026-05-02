@@ -1,11 +1,12 @@
 import supabase from "./supabase.service.js";
+import { safeString } from "../core/safety.js";
 
 export async function shouldSendAlert(chatId, symbol, alertType) {
   const { data, error } = await supabase
     .from("alert_memory")
     .select("*")
     .eq("chat_id", String(chatId))
-    .eq("symbol", symbol.toUpperCase())
+    .eq("symbol", safeString(symbol).toUpperCase())
     .eq("alert_type", alertType)
     .order("last_sent_at", { ascending: false })
     .limit(1)
@@ -32,7 +33,7 @@ export async function saveAlert(chatId, symbol, alertType) {
     .from("alert_memory")
     .upsert({
       chat_id: String(chatId),
-      symbol: symbol.toUpperCase(),
+      symbol: safeString(symbol).toUpperCase(),
       alert_type: alertType,
       last_sent_at: new Date().toISOString()
     });

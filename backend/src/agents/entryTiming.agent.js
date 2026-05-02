@@ -1,5 +1,6 @@
 // agents/entryTiming.agent.js
 import { getLiveMarketData } from "../services/marketData.service.js";
+import { safeString, safeSubstring } from "../core/safety.js";
 
 export async function analyzeEntryTiming({
     stock,
@@ -146,8 +147,8 @@ export async function analyzeEntryTiming({
         console.log("--- ENTRY TIMING DEBUG ---");
         console.log("SYMBOL:", fetchSymbol);
         console.log("CURRENT PRICE:", activePrice);
-        const safeMarket = JSON.stringify(marketData) || "";
-        console.log("MARKET DATA:", safeMarket.substring(0, 200));
+        const safeMarket = safeString(JSON.stringify(marketData));
+        console.log("MARKET DATA:", safeSubstring(safeMarket, 200));
         console.log("--------------------------");
 
         return {

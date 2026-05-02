@@ -1,5 +1,6 @@
 import { Telegraf, Markup, session } from "telegraf";
 import { masterAgent } from "../agents/master.agent.js";
+import { extractSymbol, shouldAnalyze, safeObject, safeString, safeSubstring } from "../core/safety.js";
 
 // Global Production Guards
 process.on("unhandledRejection", (err) => {
@@ -29,29 +30,6 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 bot.use(session());
 
 const userStates = new Map();
-
-function shouldAnalyze(symbol) {
-  if (!symbol || typeof symbol !== "string") return false;
-  const clean = symbol.trim().toUpperCase().replace(/\//g, "");
-  if (clean.length < 3) return false;
-  // Check pattern of the ticker part (before any suffix like .NS)
-  const tickerPart = clean.split(".")[0];
-  if (!/^[A-Z&]+$/.test(tickerPart)) return false;
-  
-  const ignore = ["HI", "HELLO", "HEY", "OK", "THANKS", "GOOD", "NICE", "YES", "NO", "HELP"];
-  if (ignore.includes(clean)) return false;
-  return true;
-}
-
-function extractSymbol(text) {
-  if (!text || typeof text !== "string") return "";
-  let clean = text.trim().toUpperCase();
-  // Remove command prefixes (case-insensitive regex)
-  clean = clean.replace(/^\/(ANALYZE|QUICK|REMOVE|ADD|UPDATE)\s+/i, "");
-  clean = clean.replace(/^\//, "");
-  // Remove all internal spaces
-  return clean.replace(/\s+/g, "");
-}
 
 // Rate Limiting (Institutional Safety)
 const lastCall = new Map();
@@ -160,7 +138,7 @@ function formatAnalysis(res, symbol) {
   const transparencyIcon = res.dataConfidence === "CACHED" ? "🟡" : (res.dataConfidence === "DEGRADED_SOURCE" ? "🔴" : "🟢");
   const transparencyText = res.dataConfidence === "CACHED" ? `Cached (${res.dataAge}s old)` : (res.dataConfidence === "DEGRADED_SOURCE" ? "Fallback" : "Live");
 
-  const insight = (res.analysis || "").substring(0, 200).trim();
+  const insight = safeSubstring(res?.analysis, 200).trim();
 
   return `
 🏛 *FINSIGHT AI — INSTITUTIONAL REPORT*
@@ -185,22 +163,20 @@ ${nextLine}
 
 async function performAnalysis(chatId, symbol, footer = "") {
   await bot.telegram.sendMessage(chatId, `🔍 Analyzing ${symbol}...\nPulling fundamentals, technicals, and risk profile.`);
+  console.log("[ANALYZE]", {
+    symbol,
+    valid: shouldAnalyze(safeString(symbol).toUpperCase())
+  });
 
   try {
-    let result;
-    try {
-      const stockData = await getCompanyOverview(symbol);
-      result = await masterAgent(stockData);
-    } catch (err) {
-      console.error("ANALYSIS CORE ERROR:", err);
-      return await bot.telegram.sendMessage(chatId, "⚠️ Unable to analyze this stock right now. Try again shortly.");
-    }
+    const stockData = await getCompanyOverview(symbol);
+    const result = await masterAgent(stockData);
 
-    const entryTiming = result.entryTiming || {};
-    const exitSignal = result.exitSignal || {};
-    const positionSizing = result.positionSizing || {};
-    const rebalancer = result.rebalancer || {};
-    const ticker = symbol.toUpperCase();
+    const entryTiming = safeObject(result?.entryTiming);
+    const exitSignal = safeObject(result?.exitSignal);
+    const positionSizing = safeObject(result?.positionSizing);
+    const rebalancer = safeObject(result?.rebalancer);
+    const ticker = safeString(symbol).toUpperCase();
 
     if (result.status === "DATA_UNAVAILABLE") {
       await bot.telegram.sendMessage(chatId, `⚠️ Couldn't fetch data for ${ticker}.\nVerify the symbol or try again later.`);
@@ -239,7 +215,8 @@ Avoid impulsive entries without confirmation.`;
 
     await bot.telegram.sendMessage(chatId, message);
   } catch (err) {
-    await bot.telegram.sendMessage(chatId, `❌ Error analyzing ${symbol}: ${err.message}`);
+    console.error("ANALYSIS ERROR:", err);
+    return await bot.telegram.sendMessage(chatId, "⚠️ Temporary issue. Please try again.");
   }
 }
 
@@ -520,7 +497,7 @@ bot.on("text", async (ctx) => {
         const result = await masterAgent(stockData);
         const counterLine = subscribed ? '' : getFreeUserFooter(displayedUsage, true);
         const message =
-          `⚡ *QUICK VERDICT — ${ticker.toUpperCase()}*\n\n` +
+          `⚡ *QUICK VERDICT — ${safeString(ticker).toUpperCase()}*\n\n` +
           `📊 Verdict: ${result.decision?.finalDecision || "HOLD"}\n` +
           `🎯 Confidence: ${result.decision?.finalConfidenceScore || 0}/10\n` +
           `⚠ Risk Level: ${result.risk?.riskLevel || "N/A"}\n\n` +
@@ -541,22 +518,22 @@ bot.on("text", async (ctx) => {
         await bot.telegram.sendMessage(chatId, "Example: /compare TCS INFY");
         return;
       }
-      const ticker1 = parts[1].trim();
-      const ticker2 = parts[2].trim();
+      const ticker1 = safeString(parts[1]).trim();
+      const ticker2 = safeString(parts[2]).trim();
       await bot.telegram.sendMessage(chatId, `⚖ Comparing ${ticker1} vs ${ticker2}...`);
       try {
         const [stock1, stock2] = await Promise.all([getCompanyOverview(ticker1), getCompanyOverview(ticker2)]);
         const [result1, result2] = await Promise.all([masterAgent(stock1), masterAgent(stock2)]);
         const score1 = result1.decision.finalConfidenceScore;
         const score2 = result2.decision.finalConfidenceScore;
-        const winner = score1 >= score2 ? ticker1.toUpperCase() : ticker2.toUpperCase();
+        const winner = score1 >= score2 ? safeString(ticker1).toUpperCase() : safeString(ticker2).toUpperCase();
         const message =
           `⚖ *STOCK COMPARISON*\n\n` +
-          `📈 *${ticker1.toUpperCase()}*\n` +
+          `📈 *${safeString(ticker1).toUpperCase()}*\n` +
           `Verdict: ${result1.decision?.finalDecision || "HOLD"}\n` +
           `Confidence: ${score1 || 0}/10\n` +
           `Risk: ${result1.risk?.riskLevel || "N/A"}\n\n` +
-          `📈 *${ticker2.toUpperCase()}*\n` +
+          `📈 *${safeString(ticker2).toUpperCase()}*\n` +
           `Verdict: ${result2.decision?.finalDecision || "HOLD"}\n` +
           `Confidence: ${score2 || 0}/10\n` +
           `Risk: ${result2.risk?.riskLevel || "N/A"}\n\n` +
@@ -620,7 +597,7 @@ bot.on("text", async (ctx) => {
     // ── Awaiting stock input ───────────────────
     if (userStates.get(chatId) === "AWAITING_STOCK") {
       userStates.delete(chatId);
-      const ticker = text.trim().toUpperCase();
+      const ticker = safeString(text).trim().toUpperCase();
       if (ticker.includes(" ") || ticker.length > 15) {
         await bot.telegram.sendMessage(chatId, "Please enter a valid stock ticker like TCS, RELIANCE, INFY");
         return;
@@ -636,7 +613,7 @@ bot.on("text", async (ctx) => {
       if (parts.length < 4) {
         return bot.telegram.sendMessage(chatId, "Usage: /add TICKER QUANTITY PRICE\nExample: /add HDFCBANK 50 1450");
       }
-      const symbol = parts[1].toUpperCase();
+      const symbol = safeString(parts[1]).toUpperCase();
       const quantity = Number(parts[2]);
       const avgPrice = Number(parts[3]);
       if (isNaN(quantity) || isNaN(avgPrice)) {
@@ -659,7 +636,7 @@ bot.on("text", async (ctx) => {
       if (parts.length < 4) {
         return bot.telegram.sendMessage(chatId, "Usage: /update TICKER QUANTITY PRICE\nExample: /update HDFCBANK 80 1425");
       }
-      const symbol = parts[1].toUpperCase();
+      const symbol = safeString(parts[1]).toUpperCase();
       const quantity = Number(parts[2]);
       const avgPrice = Number(parts[3]);
       if (isNaN(quantity) || isNaN(avgPrice)) {
@@ -713,7 +690,7 @@ bot.on("text", async (ctx) => {
         }
 
         const health = await analyzePortfolioHealth(stocks);
-        const details = health.details || {};
+        const details = safeObject(health?.details);
         
         const message =
           `🏥 PORTFOLIO HEALTH REPORT\n━━━━━━━━━━━━━━━━━━\n` +
@@ -747,21 +724,19 @@ bot.on("text", async (ctx) => {
     }
 
     // ── Intent Detection (Strict Routing) ───
-    let symbolCandidate = extractSymbol(text);
+    const symbolCandidate = extractSymbol(text);
     // 🔥 FINAL HARD SANITIZE (Gate 0)
-    if (typeof symbolCandidate === "string") {
-      symbolCandidate = symbolCandidate.replace(/\//g, "").trim().toUpperCase();
-    }
+    const normalizedSymbol = safeString(symbolCandidate).replace(/\//g, "").trim().toUpperCase();
 
     const isExplicitAnalyze = lowerText.startsWith("/analyze") || lowerText.startsWith("analyze");
-    const isTickerPattern = shouldAnalyze(symbolCandidate);
+    const isTickerPattern = shouldAnalyze(normalizedSymbol);
 
     if (isExplicitAnalyze || isTickerPattern) {
-      if (symbolCandidate && symbolCandidate.length <= 15) {
+      if (normalizedSymbol && normalizedSymbol.length <= 15) {
         // Second-Layer Validation: Check if symbol actually exists
-        const exists = await checkSymbolExists(symbolCandidate);
+        const exists = await checkSymbolExists(normalizedSymbol);
         if (exists) {
-          await performAnalysis(chatId, symbolCandidate, !subscribed ? getFreeUserFooter(displayedUsage) : "");
+          await performAnalysis(chatId, normalizedSymbol, !subscribed ? getFreeUserFooter(displayedUsage) : "");
           if (!subscribed && !skipUsage) await incrementUsage(chatId);
           return;
         } else if (isExplicitAnalyze) {

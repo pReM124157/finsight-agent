@@ -24,6 +24,7 @@ import {
 } from "../services/intelligence.service.js";
 
 import { generateInvestmentAnalysis, generateTieredAnalysis } from "../services/claude.service.js";
+import { safeString, safeSubstring } from "../core/safety.js";
 
 // --- Global Cache for Market Updates ---
 let marketCache = {
@@ -510,8 +511,8 @@ Tone: A sharp trader texting insights. Professional, fast, non-AI.
 
     // Otherwise, treat as stock analysis request
     const stockData = input || {};
-    const safeInput = JSON.stringify(stockData) || "";
-    console.log("MASTER AGENT INPUT:", safeInput.substring(0, 200));
+    const safeInput = safeString(JSON.stringify(stockData));
+    console.log("MASTER AGENT INPUT:", safeSubstring(safeInput, 200));
 
     const ticker = 
       stockData.Symbol || 

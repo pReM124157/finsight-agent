@@ -1,4 +1,5 @@
 import supabase from "./supabase.service.js";
+import { safeString } from "../core/safety.js";
 
 /**
  * Adds or updates a holding for a user.
@@ -11,7 +12,7 @@ export async function addHolding(chatId, { symbol, quantity, avgPrice }) {
       .from("holdings")
       .upsert({
         chat_id: String(chatId),
-        symbol: symbol.toUpperCase(),
+        symbol: safeString(symbol).toUpperCase(),
         quantity,
         avg_price: avgPrice,
         updated_at: new Date()
@@ -66,7 +67,7 @@ export async function removeHolding(chatId, symbol) {
       .from("holdings")
       .delete()
       .eq("chat_id", chatId)
-      .eq("symbol", symbol.toUpperCase());
+      .eq("symbol", safeString(symbol).toUpperCase());
 
     if (error) throw error;
     return data;
@@ -85,7 +86,7 @@ export async function updateHolding(chatId, symbol, updates) {
       .from("holdings")
       .update(updates)
       .eq("chat_id", chatId)
-      .eq("symbol", symbol.toUpperCase());
+      .eq("symbol", safeString(symbol).toUpperCase());
 
     if (error) throw error;
     return data;

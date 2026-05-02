@@ -1,6 +1,7 @@
 import axios from 'axios';
 import YahooFinance from "yahoo-finance2";
 import { fetchIndianHolidays } from "./holiday.service.js";
+import { safeString, safeSubstring } from "../core/safety.js";
 
 const yahooFinance = new YahooFinance();
 
@@ -218,8 +219,8 @@ export async function getCompanyOverview(symbol) {
     }
 
     console.log("FETCH SUCCESS (Overview):", fetchSymbol);
-    const safeRaw = JSON.stringify(result) || "";
-    console.log("RAW YAHOO SUMMARY RESULT:", safeRaw.substring(0, 500));
+    const safeRaw = safeString(JSON.stringify(result));
+    console.log("RAW YAHOO SUMMARY RESULT:", safeSubstring(safeRaw, 500));
 
     const {
       financialData = {},
@@ -267,7 +268,7 @@ export async function getCompanyOverview(symbol) {
     console.error(`STACK: ${error.stack}`);
     
     // Return at least the symbol to prevent downstream "UNKNOWN" errors
-    const upperSymbol = symbol.toUpperCase().replace(/\s+/g, "");
+    const upperSymbol = safeString(symbol).toUpperCase().replace(/\s+/g, "");
     return {
       Symbol: upperSymbol.includes(".") ? upperSymbol : `${upperSymbol}.NS`
     };
