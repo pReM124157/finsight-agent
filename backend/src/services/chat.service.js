@@ -67,6 +67,6 @@ If the user asks anything:
     return reply;
   } catch (err) {
     console.error("GROQ ERROR:", err);
-    return "Something went wrong. Try again.";
+    throw new Error("Something went wrong. Try again.");
   }
 }

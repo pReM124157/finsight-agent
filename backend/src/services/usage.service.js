@@ -41,4 +41,18 @@ export async function incrementUsage(chatId, currentCount) {
   }).eq('telegram_chat_id', chatId.toString());
 }
 
+export async function getRemainingUsage(chatId) {
+  const { data, error } = await supabase
+    .from("subscribers")
+    .select("free_usage_count, free_usage_reset_at")
+    .eq("telegram_chat_id", chatId.toString())
+    .single();
+  if (error || !data) return null;
+  const remaining = 10 - (data.free_usage_count || 0);
+  return {
+    remaining,
+    resetAt: data.free_usage_reset_at
+  };
+}
+
 export { FREE_LIMIT };

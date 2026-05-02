@@ -13,7 +13,7 @@ import {
 } from "./portfolioMemory.service.js";
 import { createSubscriptionLink, cancelSubscriptionNow, cancelSubscriptionLater } from "../routes/payment.js";
 import supabase from "./supabase.service.js";
-import { checkUsage, incrementUsage, FREE_LIMIT } from "./usage.service.js";
+import { checkUsage, incrementUsage, FREE_LIMIT, getRemainingUsage } from "./usage.service.js";
 import { generateChatReply } from "./chat.service.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
@@ -48,10 +48,10 @@ async function isProUser(chatId) {
 }
 
 function getFreeUserFooter(usageCount, isHighIntent = false) {
-  let footer = `\n\n━━━━━━━━━━━━━━━━━━\n🆓 Free Plan: 10 requests / 12h`;
-  const remaining = 10 - usageCount;
+  const remaining = Math.max(0, 10 - usageCount);
+  let footer = `\n\n━━━━━━━━━━━━━━━━━━\n🆓 Free Plan: ${remaining}/10 requests remaining`;
   
-  if (usageCount >= 8 && usageCount < 10) {
+  if (remaining > 0 && remaining <= 2) {
     footer += `\n\n⚠️ ${remaining} request${remaining === 1 ? '' : 's'} left.\nYou're in the middle of tracking something important.\nStopping here breaks the edge. Most users upgrade at this point to stay consistent.\n👉 /subscribe`;
   } else if (isHighIntent) {
     footer += `\n\n💎 Most users tracking multiple stocks switch to Pro.\nIt removes interruptions.\n👉 /subscribe`;
@@ -622,11 +622,16 @@ bot.on("text", async (ctx) => {
 
     if (simpleReplies[lowerText]) {
       let reply = simpleReplies[lowerText];
-      if (!subscribed) {
-        reply += getFreeUserFooter(usageCount);
-        await incrementUsage(chatId, usageCount);
-      }
       return await bot.telegram.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
+    }
+
+    if (lowerText.includes("free request") || lowerText.includes("usage") || lowerText === "/usage") {
+      const usage = await getRemainingUsage(chatId);
+      if (!usage) {
+        return await bot.telegram.sendMessage(chatId, "Could not fetch usage. Try again.");
+      }
+      const resetTime = new Date(usage.resetAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
+      return await bot.telegram.sendMessage(chatId, `📊 *Usage Status*\n\nYou have ${usage.remaining}/10 requests left.\nResets at ${resetTime} (IST)`, { parse_mode: 'Markdown' });
     }
 
     const explicitAnalyzeMatch = lowerText.match(/^\/?(?:analyze|analyse|anyze|check|scan)\s+([a-z0-9_.-]+)$/i);
