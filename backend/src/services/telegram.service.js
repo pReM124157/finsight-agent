@@ -471,7 +471,7 @@ bot.action('cancel_now', async (ctx) => {
     .from('subscribers')
     .update({
       status: 'cancelled',
-      plan: 'free',
+      plan: 'FREE',
       cancelled_at: new Date().toISOString()
     })
     .eq('telegram_chat_id', chatId);
@@ -526,7 +526,7 @@ bot.on("text", async (ctx) => {
     const user = await getUsageUser(chatId);
     console.log("USER PLAN:", user?.plan, "IS_PRO:", user?.is_pro);
     const lowerText = text.toLowerCase();
-    const isProUser = user?.plan === "PRO" || user?.is_pro === true;
+    const isProUser = (user?.plan || "").toLowerCase() === "pro" || user?.is_pro === true;
 
     if (lowerText === "/subscribe") {
       await sendSubscriptionLink(chatId);
