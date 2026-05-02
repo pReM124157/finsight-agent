@@ -14,6 +14,7 @@ import {
 import { createSubscriptionLink, cancelSubscriptionNow, cancelSubscriptionLater } from "../routes/payment.js";
 import supabase from "./supabase.service.js";
 import { checkUsage, incrementUsage, FREE_LIMIT } from "./usage.service.js";
+import { generateChatReply } from "./chat.service.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
@@ -604,14 +605,13 @@ bot.on("text", async (ctx) => {
     }
 
     const simpleReplies = {
-      'ok': "Got it. Tell me what you'd like to check next.",
-      'okay': "Got it. Tell me what you'd like to check next.",
-      'thanks': "Anytime. Want me to look at a stock or your portfolio?",
-      'thank you': "Anytime. Want me to look at a stock or your portfolio?",
-      'hi': "Hello! Tell me what you'd like to analyze — stock, market, or portfolio.",
-      'hello': "Hello! Tell me what you'd like to analyze — stock, market, or portfolio.",
-      'hey': "Hey there! Tell me what you'd like to analyze — stock, market, or portfolio.",
-      'bye': "Goodbye! Let me know when you need more market insights."
+      'hi': "Hi — what do you want to check?",
+      'hello': "Hey — markets or a stock?",
+      'ok': "Got it.",
+      'okay': "Got it.",
+      'thanks': "Anytime.",
+      'thank you': "Anytime.",
+      'bye': "Alright. Come back when you need insights."
     };
 
     if (simpleReplies[lowerText]) {
@@ -642,23 +642,44 @@ bot.on("text", async (ctx) => {
       return;
     }
 
-    // ── Conversational AI Fallback (tiered) ───
-
-    let contextualQuery = text;
-    if (ctx.message.reply_to_message?.text) {
-      contextualQuery = `Previous Context:\n${ctx.message.reply_to_message.text}\n\nUser Follow-up:\n${text}`.trim();
+    // ── Intent Detection & Fallback ───
+    function detectIntent(text) {
+      const t = text.toLowerCase();
+      if (
+        t.includes("analyze") ||
+        t.includes("stock") ||
+        t.includes("price") ||
+        t.includes("market") ||
+        t.includes("portfolio") ||
+        t.includes("compare") ||
+        t.includes("top") ||
+        t.includes("best")
+      ) return "finance";
+      return "chat";
     }
 
-    const aiResponse = await masterAgent({ userQuery: contextualQuery, mode: "conversation", isPro: subscribed });
+    const intent = detectIntent(text);
+    let finalMessage = "";
 
-    const needsDisclaimer =
-      lowerText.includes("buy") || lowerText.includes("invest") ||
-      lowerText.includes("stock") || lowerText.includes("portfolio") ||
-      lowerText.includes("money") || lowerText.includes("market");
+    if (intent === "finance") {
+      let contextualQuery = text;
+      if (ctx.message.reply_to_message?.text) {
+        contextualQuery = `Previous Context:\n${ctx.message.reply_to_message.text}\n\nUser Follow-up:\n${text}`.trim();
+      }
 
-    let finalMessage = needsDisclaimer
-      ? `${aiResponse.response}\n\n⚠️ For educational purposes only.\nNot SEBI registered investment advice.`
-      : aiResponse.response;
+      const aiResponse = await masterAgent({ userQuery: contextualQuery, mode: "conversation", isPro: subscribed });
+
+      const needsDisclaimer =
+        lowerText.includes("buy") || lowerText.includes("invest") ||
+        lowerText.includes("stock") || lowerText.includes("portfolio") ||
+        lowerText.includes("money") || lowerText.includes("market");
+
+      finalMessage = needsDisclaimer
+        ? `${aiResponse.response}\n\n⚠️ For educational purposes only.\nNot SEBI registered investment advice.`
+        : aiResponse.response;
+    } else {
+      finalMessage = await generateChatReply(text);
+    }
 
     // Fetch trial status for messaging
     // Append upgrade prompt + usage counter for free users
