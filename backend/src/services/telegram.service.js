@@ -513,19 +513,30 @@ bot.action('cancel_later', async (ctx) => {
 
 bot.on("text", async (ctx) => {
   try {
-    const chatId = ctx.chat.id;
-    
+    // Normalize chatId to STRING — DB stores it as text (from Razorpay notes)
+    // ctx.chat.id is a number; type mismatch causes DB lookup to return null → fallback to FREE
+    const chatId = ctx.chat.id.toString();
+
     // 1. Rate Limit Check
-    if (!canCall(chatId)) {
+    if (!canCall(ctx.chat.id)) {
         return; // Silent drop or minimal feedback
     }
 
     console.log("CHAT ID:", chatId);
     const text = ctx.message.text?.trim() || "";
     if (!text) return;
-    const user = await getUsageUser(chatId);
+
+    // Direct DB fetch — explicit string match, full field visibility
+    const { data: user, error: userFetchError } = await supabase
+      .from("subscribers")
+      .select("plan, is_pro, free_usage_count, usage_started_at")
+      .eq("telegram_chat_id", chatId)
+      .maybeSingle();
+
+    console.log("[DB FETCH] chatId:", chatId, "| user:", JSON.stringify(user), "| error:", userFetchError?.message || null);
+
     const lowerText = text.toLowerCase();
-    const isProUser = (user?.plan || "").toLowerCase() === "pro" || user?.is_pro === true;
+    const isProUser = !!(user && (user.is_pro === true || (user.plan || "").toLowerCase() === "pro"));
     console.log("[PLAN CHECK] plan:", user?.plan, "| is_pro:", user?.is_pro, "| isProUser:", isProUser);
 
     if (lowerText === "/subscribe") {
@@ -533,12 +544,13 @@ bot.on("text", async (ctx) => {
       return;
     }
 
-    const usageResult = isProUser ? { allowed: true, footer: "" } : processUsage(user);
+    const safeUser = user || { plan: "FREE", is_pro: false, free_usage_count: 0, usage_started_at: null };
+    const usageResult = isProUser ? { allowed: true, footer: "" } : processUsage(safeUser);
     if (!isProUser) {
       console.log("[USAGE CHECK]", {
-        chatId: chatId.toString(),
+        chatId,
         allowed: usageResult.allowed,
-        nextCount: usageResult.usage ?? user?.free_usage_count ?? 0
+        nextCount: usageResult.usage ?? safeUser.free_usage_count
       });
       if (!usageResult.allowed) {
         await bot.telegram.sendMessage(chatId, usageResult.footer);
@@ -546,14 +558,13 @@ bot.on("text", async (ctx) => {
       }
     }
 
-    const subscribed = isProUser;
     const usageFooter = isProUser ? "" : (usageResult.footer || "");
-    console.log("[FOOTER GATE] isProUser:", isProUser, "| footer suppressed:", isProUser, "| footer:", usageFooter || "(none)");
+    console.log("[FOOTER GATE] isProUser:", isProUser, "| usageFooter:", usageFooter || "(none)");
     const withUsageFooter = (message) => (usageFooter ? `${message}\n\n${usageFooter}` : message);
     if (!isProUser) {
       await updateUsage(chatId, usageResult.usage, usageResult.start);
       console.log("[USAGE UPDATED]", {
-        chatId: chatId.toString(),
+        chatId,
         usage: usageResult.usage,
         usage_started_at: new Date(usageResult.start).toISOString()
       });
