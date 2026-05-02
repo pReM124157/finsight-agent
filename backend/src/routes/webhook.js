@@ -27,9 +27,11 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
 
   try {
     const data = JSON.parse(req.body);
+    console.log("🔥 WEBHOOK HIT", data.event);
+    console.log("BODY:", JSON.stringify(data, null, 2));
+
     const event = data.event;
     const payload = data.payload;
-    console.log("Webhook received:", event);
 
 
     if (event === 'subscription.activated') {
@@ -63,21 +65,22 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
       } catch(err) {}
     }
 
-    if (event === 'invoice.paid') {
-      const invoice = payload.invoice.entity;
-      console.log("INVOICE ID:", invoice.id);
+    if (event === 'invoice.paid' || event === 'subscription.charged') {
+      const invoice = payload.invoice?.entity || payload.subscription?.entity;
+      console.log("INVOICE/SUB ID:", invoice.id);
       let chatId = invoice.notes?.telegram_chat_id;
-      if (!chatId && invoice.subscription_id) {
+      if (!chatId && (invoice.subscription_id || invoice.id)) {
+        const subId = invoice.subscription_id || invoice.id;
         const { data: user } = await supabase
           .from('subscribers')
           .select('telegram_chat_id')
-          .eq('razorpay_subscription_id', invoice.subscription_id)
+          .eq('razorpay_subscription_id', subId)
           .maybeSingle();
         chatId = user?.telegram_chat_id;
       }
       console.log("CHAT ID:", chatId);
       if (!chatId) {
-        console.log("❌ No chatId for invoice.paid:", invoice.id);
+        console.log(`❌ No chatId for ${event}:`, invoice.id);
         return res.json({ status: 'ok' });
       }
       console.log("RENEWAL FOR:", chatId);
