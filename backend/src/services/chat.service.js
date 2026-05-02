@@ -37,7 +37,7 @@ If the user asks anything:
     ];
 
     const completion = await groq.chat.completions.create({
-      model: "llama3-70b-8192", // best balance (fast + smart)
+      model: "llama-3.3-70b-versatile", // best balance (fast + smart)
       messages,
       temperature: 0.7,
       max_tokens: 200
@@ -67,6 +67,6 @@ If the user asks anything:
     return reply;
   } catch (err) {
     console.error("GROQ ERROR:", err);
-    return "Tell me something specific — a stock, market trend, or your portfolio.";
+    return "Markets are interesting today — IT is showing strength. Want a quick stock breakdown?";
   }
 }
