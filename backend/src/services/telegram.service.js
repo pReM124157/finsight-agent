@@ -1,6 +1,6 @@
 import { Telegraf, Markup, session } from "telegraf";
 import { masterAgent } from "../agents/master.agent.js";
-import { extractSymbol, shouldAnalyze, safeObject, safeString, safeSubstring } from "../core/safety.js";
+import { safeObject, safeString, safeSubstring } from "../core/safety.js";
 
 // Global Production Guards
 process.on("unhandledRejection", (err) => {
@@ -87,6 +87,30 @@ function isCasualMessage(text) {
   ];
   const clean = safeString(text).toLowerCase().trim();
   return casual.includes(clean) || clean.length < 4;
+}
+
+function shouldAnalyze(symbol, originalText) {
+  if (!symbol) return false;
+  const text = safeString(originalText).toLowerCase();
+  if (text.includes(" ")) return false;
+  const ignoreWords = [
+    "hi", "hello", "hey", "thanks", "thank", "you",
+    "ok", "okay", "friend", "assistance", "nothing",
+    "good", "nice", "yes", "no"
+  ];
+  if (ignoreWords.includes(symbol.toLowerCase())) return false;
+  if (!/^[A-Z]{3,10}$/.test(symbol)) return false;
+  return true;
+}
+
+function extractSymbol(text) {
+  if (!text) return null;
+  const clean = safeString(text)
+    .replace("/", "")
+    .replace("analyze", "")
+    .trim();
+  if (clean.includes(" ")) return null;
+  return clean.toUpperCase();
 }
 
 function smartFallback(label, data, context = {}) {
@@ -775,22 +799,20 @@ bot.on("text", async (ctx) => {
     // ── Final Routing ─────────────────────────
     const symbol = extractSymbol(text);
     const isAnalyzeCommand =
-      lowerText.startsWith("analyze") ||
+      text.toLowerCase().startsWith("analyze") ||
       text.startsWith("/analyze");
-    const shouldRunAnalysis = shouldAnalyze(safeString(symbol).replace(/\//g, "").trim().toUpperCase());
-    const casualMessage = isCasualMessage(text);
+    const runAnalysis = isAnalyzeCommand || shouldAnalyze(symbol, text);
 
-    if ((isAnalyzeCommand || shouldRunAnalysis) && !casualMessage) {
-      const normalizedSymbol = safeString(symbol).replace(/\//g, "").trim().toUpperCase();
-      if (normalizedSymbol && normalizedSymbol.length <= 15) {
-        const exists = await checkSymbolExists(normalizedSymbol);
-        if (exists) {
-          await performAnalysis(chatId, normalizedSymbol, !subscribed ? usageFooter : "");
-          return;
-        } else if (isAnalyzeCommand) {
-          return await bot.telegram.sendMessage(chatId, withUsageFooter("⚠️ I couldn't find that stock. Please check the ticker (e.g., TCS, RELIANCE) and try again."));
-        }
+    if (runAnalysis) {
+      if (!symbol) {
+        return await bot.telegram.sendMessage(chatId, withUsageFooter("Please share a valid ticker like TCS or RELIANCE."));
       }
+      const exists = await checkSymbolExists(symbol);
+      if (!exists) {
+        return await bot.telegram.sendMessage(chatId, withUsageFooter("⚠️ I couldn't find that stock. Please check the ticker (e.g., TCS, RELIANCE) and try again."));
+      }
+      await performAnalysis(chatId, symbol, !subscribed ? usageFooter : "");
+      return;
     }
 
     let reply = "";
