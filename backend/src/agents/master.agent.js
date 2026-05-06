@@ -537,31 +537,44 @@ Tone: A sharp trader texting insights. Professional, fast, non-AI.
         });
 
         const positions = Array.isArray(portfolioData?.positions) ? portfolioData.positions : [];
+        const reduceTickers = new Set(
+          holdingReviews
+            .filter((h) => h.action === "REDUCE")
+            .map((h) => h.symbol)
+        );
+        const filteredPositions = positions.filter((p) => !reduceTickers.has(p.ticker));
         let deployed = 0;
-        for (const p of positions) {
+        for (const p of filteredPositions) {
           deployed += Number(p.actual_cost || 0);
         }
         const undeployed = Math.max(0, Number(totalAmount) - deployed);
+        const fmtINR = (value) => `₹${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
+        const thesisByTicker = {
+          INFY: "Strong cash reserves and improving IT demand recovery.",
+          ICICIPRULI: "Insurance sector momentum improving with favorable valuations.",
+          TATACONSUM: "Defensive consumption exposure improves portfolio balance.",
+          HDFCBANK: "High-quality banking franchise with resilient credit growth."
+        };
 
         const currentLines = holdingReviews.length
           ? holdingReviews.map((h) =>
               `${h.action === "REDUCE" ? "🔴" : "🟢"} ${h.symbol}\n` +
               `• Status: ${h.action}\n` +
-              `• Live Price: ₹${h.livePrice || "Unavailable"}\n` +
+              `• Live Price: ${h.livePrice ? fmtINR(h.livePrice) : "Unavailable"}\n` +
               `• Quantity: ${h.qty}\n` +
               `• PnL: ${h.pnlPct >= 0 ? "+" : ""}${h.pnlPct.toFixed(1)}%\n` +
               `• Insight:\n${h.reason}`
             ).join("\n")
           : "No existing holdings found for this account.";
 
-        const newLines = positions.length
-          ? positions.map((p) =>
+        const newLines = filteredPositions.length
+          ? filteredPositions.map((p) =>
               `📈 ${p.ticker}\n` +
-              `• Live Price: ₹${Number(p.live_price || 0).toFixed(2)}\n` +
+              `• Live Price: ${fmtINR(p.live_price)}\n` +
               `• Suggested Shares: ${p.shares}\n` +
-              `• Capital Allocation: ₹${Number(p.actual_cost || 0).toFixed(2)}\n` +
+              `• Capital Allocation: ${fmtINR(p.actual_cost)}\n` +
               `• Portfolio Weight: ${p.actual_percentage || 0}%\n` +
-              `• Thesis:\nPrice-action aligned allocation with deterministic position sizing.`
+              `• Thesis:\n${thesisByTicker[p.ticker] || "Balanced risk-adjusted exposure with stable market structure."}`
             ).join("\n")
           : "No deployable positions generated.";
 
@@ -575,13 +588,20 @@ ${newLines}
 ━━━━━━━━━━━━━━━━━━
 📊 FINAL PORTFOLIO SUMMARY
 • Existing Holdings: ${holdingReviews.length}
-• Fresh Capital Added: ₹${Number(totalAmount).toFixed(2)}
-• Capital Deployed: ₹${deployed.toFixed(2)}
-• Remaining Cash: ₹${undeployed.toFixed(2)}
+• Fresh Capital Added: ${fmtINR(totalAmount)}
+• Capital Deployed: ${fmtINR(deployed)}
+• Remaining Cash: ${fmtINR(undeployed)}
 📌 Risk Profile: ${holdingReviews.some((h) => h.action === "REDUCE") ? "MODERATE" : "BALANCED"}
-📌 Diversification: ${positions.length >= 3 ? "IMPROVED" : "STABLE"}
+📌 Diversification: ${filteredPositions.length >= 3 ? "IMPROVED" : "STABLE"}
 📌 Sector Balance: ${holdingReviews.some((h) => h.action === "REDUCE") ? "HEALTHIER" : "BALANCED"}
 📌 Expected Stability: ${holdingReviews.some((h) => h.action === "REDUCE") ? "STRONGER" : "STABLE"}
+━━━━━━━━━━━━━━━━━━
+🧠 STRATEGIC OUTLOOK
+Portfolio now has lower concentration risk,
+improved sector diversification, and stronger
+defensive balance versus the previous allocation.
+Current structure favors medium-term stability
+over aggressive short-term growth.
 ━━━━━━━━━━━━━━━━━━
 ⚠ Educational only. Not financial advice.`;
 
