@@ -615,6 +615,38 @@ Tone: A sharp trader texting insights. Professional, fast, non-AI.
         }
       }
 
+      const portfolioIntent =
+        /portfolio|build.*portfolio|invest.*₹|allocate|allocation/i
+          .test(userMessage || "");
+      if (portfolioIntent) {
+        const portfolioData =
+          await executeTool("buildPortfolio", {
+            totalAmount: 20000,
+            allocations: [
+              { ticker: "HDFCBANK", percentage: 40 },
+              { ticker: "INFY", percentage: 30 },
+              { ticker: "TATACONSUM", percentage: 15 },
+              { ticker: "ICICIPRULI", percentage: 15 }
+            ]
+          });
+
+        const verifiedPortfolioPrompt = `
+VERIFIED LIVE PORTFOLIO DATA
+${JSON.stringify(portfolioData, null, 2)}
+Rules:
+- Use ONLY these prices and share counts
+- Do NOT invent numbers
+- Do NOT approximate
+- Explain allocations and risks only
+`.trim();
+
+        const portfolioPrompt = `${FINSIGHT_PERSONA}\n\n${verifiedPortfolioPrompt}\n\nUser Question: ${userQuery}`.trim();
+        const portfolioOriginalResponse = await generateTieredAnalysis(portfolioPrompt, isPro);
+        let portfolioResponse = isPro ? cleanOutput(portfolioOriginalResponse) : portfolioOriginalResponse;
+        portfolioResponse = validateResponse(portfolioResponse, portfolioOriginalResponse);
+        return { response: portfolioResponse };
+      }
+
       // 5. Final Intent Check (Safety Guard)
       const hasExplicitIntent = /analyze|market|nifty|sensex|stock/i.test(userQuery);
       if (!isLikelyTicker && !hasExplicitIntent) {
