@@ -1,41 +1,72 @@
 import os from "os";
 import process from "process";
-import supabase from "./supabase.service.js";
+import supabase, { isSupabaseSchemaMissing, logInfraFallbackOnce } from "./supabase.service.js";
 import { createTraceId, logEvent } from "./telemetry.service.js";
 
 const INSTANCE_ID = `${os.hostname()}:${process.pid}:${createTraceId("instance")}`;
+const localLeases = new Map();
 
 export function getInstanceId() {
   return INSTANCE_ID;
 }
 
 export async function claimSchedulerLease(name, ttlSeconds = 120) {
-  const { data, error } = await supabase.rpc("claim_scheduler_lease", {
-    p_lease_name: name,
-    p_owner_id: INSTANCE_ID,
-    p_ttl_seconds: ttlSeconds
-  });
-  if (error) throw error;
-  return data === true;
+  try {
+    const { data, error } = await supabase.rpc("claim_scheduler_lease", {
+      p_lease_name: name,
+      p_owner_id: INSTANCE_ID,
+      p_ttl_seconds: ttlSeconds
+    });
+    if (error) throw error;
+    return data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    logInfraFallbackOnce("scheduler_lease_claim", "[infra] scheduler lease RPC missing, using local lease fallback");
+    const now = Date.now();
+    const existing = localLeases.get(name);
+    if (existing && existing.leaseUntil > now && existing.ownerId !== INSTANCE_ID) return false;
+    localLeases.set(name, {
+      ownerId: INSTANCE_ID,
+      leaseUntil: now + ttlSeconds * 1000
+    });
+    return true;
+  }
 }
 
 export async function renewSchedulerLease(name, ttlSeconds = 120) {
-  const { data, error } = await supabase.rpc("renew_scheduler_lease", {
-    p_lease_name: name,
-    p_owner_id: INSTANCE_ID,
-    p_ttl_seconds: ttlSeconds
-  });
-  if (error) throw error;
-  return data === true;
+  try {
+    const { data, error } = await supabase.rpc("renew_scheduler_lease", {
+      p_lease_name: name,
+      p_owner_id: INSTANCE_ID,
+      p_ttl_seconds: ttlSeconds
+    });
+    if (error) throw error;
+    return data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    const existing = localLeases.get(name);
+    if (!existing || existing.ownerId !== INSTANCE_ID) return false;
+    existing.leaseUntil = Date.now() + ttlSeconds * 1000;
+    localLeases.set(name, existing);
+    return true;
+  }
 }
 
 export async function releaseSchedulerLease(name) {
-  const { data, error } = await supabase.rpc("release_scheduler_lease", {
-    p_lease_name: name,
-    p_owner_id: INSTANCE_ID
-  });
-  if (error) throw error;
-  return data === true;
+  try {
+    const { data, error } = await supabase.rpc("release_scheduler_lease", {
+      p_lease_name: name,
+      p_owner_id: INSTANCE_ID
+    });
+    if (error) throw error;
+    return data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    const existing = localLeases.get(name);
+    if (!existing || existing.ownerId !== INSTANCE_ID) return false;
+    localLeases.delete(name);
+    return true;
+  }
 }
 
 export async function runWithSchedulerLease(name, task, options = {}) {

@@ -1,9 +1,10 @@
-import supabase from "./supabase.service.js";
+import supabase, { isSupabaseSchemaMissing, logInfraFallbackOnce } from "./supabase.service.js";
 import { safeString } from "../core/safety.js";
 import { createTraceId, logEvent } from "./telemetry.service.js";
 
 const DEFAULT_ALERT_COOLDOWN_HOURS = 48;
 const DEFAULT_ALERT_CLAIM_TTL_SECONDS = 180;
+const localAlertClaims = new Map();
 
 function normalizeSymbol(symbol) {
   return safeString(symbol).toUpperCase();
@@ -58,24 +59,42 @@ export async function claimAlertDelivery(chatId, symbol, alertType, options = {}
   const cooldownHours = options.cooldownHours || DEFAULT_ALERT_COOLDOWN_HOURS;
   const claimTtlSeconds = options.claimTtlSeconds || DEFAULT_ALERT_CLAIM_TTL_SECONDS;
   const traceId = options.traceId || ownerId;
+  const normalizedSymbol = normalizeSymbol(symbol);
+  const claimKey = `${String(chatId)}:${normalizedSymbol}:${alertType}`;
 
-  const { data, error } = await supabase.rpc("claim_alert_delivery", {
-    p_chat_id: String(chatId),
-    p_symbol: normalizeSymbol(symbol),
-    p_alert_type: alertType,
-    p_owner_id: ownerId,
-    p_claim_ttl_seconds: claimTtlSeconds,
-    p_cooldown_hours: cooldownHours
-  });
+  let claimed = false;
+  try {
+    const { data, error } = await supabase.rpc("claim_alert_delivery", {
+      p_chat_id: String(chatId),
+      p_symbol: normalizedSymbol,
+      p_alert_type: alertType,
+      p_owner_id: ownerId,
+      p_claim_ttl_seconds: claimTtlSeconds,
+      p_cooldown_hours: cooldownHours
+    });
 
-  if (error) throw error;
+    if (error) throw error;
+    claimed = data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    logInfraFallbackOnce("alert_claim_rpc", "[infra] alert delivery RPCs missing, using local alert claim fallback");
+    const current = localAlertClaims.get(claimKey);
+    if (current && current.expiresAt > Date.now() && current.ownerId !== ownerId) {
+      claimed = false;
+    } else {
+      localAlertClaims.set(claimKey, {
+        ownerId,
+        expiresAt: Date.now() + claimTtlSeconds * 1000
+      });
+      claimed = true;
+    }
+  }
 
-  const claimed = data === true;
   logEvent(claimed ? "alert.claimed" : "alert.skipped", {
     traceId,
     ownerId,
     chatId: String(chatId),
-    symbol: normalizeSymbol(symbol),
+    symbol: normalizedSymbol,
     alertType
   });
 
@@ -87,39 +106,65 @@ export async function claimAlertDelivery(chatId, symbol, alertType, options = {}
 }
 
 export async function finalizeAlertDelivery(chatId, symbol, alertType, ownerId, traceId = ownerId) {
-  const { data, error } = await supabase.rpc("finalize_alert_delivery", {
-    p_chat_id: String(chatId),
-    p_symbol: normalizeSymbol(symbol),
-    p_alert_type: alertType,
-    p_owner_id: ownerId
-  });
-  if (error) throw error;
+  const normalizedSymbol = normalizeSymbol(symbol);
+  const claimKey = `${String(chatId)}:${normalizedSymbol}:${alertType}`;
+  let finalized = false;
+  try {
+    const { data, error } = await supabase.rpc("finalize_alert_delivery", {
+      p_chat_id: String(chatId),
+      p_symbol: normalizedSymbol,
+      p_alert_type: alertType,
+      p_owner_id: ownerId
+    });
+    if (error) throw error;
+    finalized = data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    const current = localAlertClaims.get(claimKey);
+    if (current?.ownerId === ownerId) {
+      localAlertClaims.delete(claimKey);
+      finalized = true;
+    }
+  }
   logEvent("alert.finalized", {
     traceId,
     ownerId,
     chatId: String(chatId),
-    symbol: normalizeSymbol(symbol),
+    symbol: normalizedSymbol,
     alertType,
-    finalized: data === true
+    finalized
   });
-  return data === true;
+  return finalized;
 }
 
 export async function releaseAlertDeliveryClaim(chatId, symbol, alertType, ownerId, traceId = ownerId) {
-  const { data, error } = await supabase.rpc("release_alert_delivery_claim", {
-    p_chat_id: String(chatId),
-    p_symbol: normalizeSymbol(symbol),
-    p_alert_type: alertType,
-    p_owner_id: ownerId
-  });
-  if (error) throw error;
+  const normalizedSymbol = normalizeSymbol(symbol);
+  const claimKey = `${String(chatId)}:${normalizedSymbol}:${alertType}`;
+  let released = false;
+  try {
+    const { data, error } = await supabase.rpc("release_alert_delivery_claim", {
+      p_chat_id: String(chatId),
+      p_symbol: normalizedSymbol,
+      p_alert_type: alertType,
+      p_owner_id: ownerId
+    });
+    if (error) throw error;
+    released = data === true;
+  } catch (error) {
+    if (!isSupabaseSchemaMissing(error)) throw error;
+    const current = localAlertClaims.get(claimKey);
+    if (current?.ownerId === ownerId) {
+      localAlertClaims.delete(claimKey);
+      released = true;
+    }
+  }
   logEvent("alert.claim.released", {
     traceId,
     ownerId,
     chatId: String(chatId),
-    symbol: normalizeSymbol(symbol),
+    symbol: normalizedSymbol,
     alertType,
-    released: data === true
+    released
   });
-  return data === true;
+  return released;
 }

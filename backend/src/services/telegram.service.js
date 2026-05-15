@@ -54,16 +54,47 @@ const BOT_LEASE_TTL_SECONDS = 120;
 const BOT_LEASE_HEARTBEAT_MS = 30000;
 const BOT_LEASE_RETRY_MS = 15000;
 const BOT_INSTANCE_ID = getInstanceId();
+const TELEGRAM_LEASE_REQUIRED = process.env.TELEGRAM_LEASE_REQUIRED === "true";
 let botStarted = false;
 let botSupervisorStarted = false;
 let botHeartbeatTimer = null;
 let botSupervisorTimer = null;
 let botLeaseOwner = false;
 let botLaunchInFlight = false;
+let botStartedInFallbackMode = false;
 
 async function canCall(userId) {
-  const ownerId = createTraceId(`throttle_${userId}`);
-  return claimEphemeralKey("telegram_throttle", userId, ownerId, Math.ceil(THROTTLE_MS / 1000));
+  try {
+    const ownerId = createTraceId(`throttle_${userId}`);
+    return claimEphemeralKey("telegram_throttle", userId, ownerId, Math.ceil(THROTTLE_MS / 1000));
+  } catch (error) {
+    logError("telegram.throttle.error", error, { userId });
+    return true;
+  }
+}
+
+async function launchBotIfNeeded(mode = "lease") {
+  if (botStarted || botLaunchInFlight) return;
+
+  botLaunchInFlight = true;
+  try {
+    await bot.launch();
+    botStarted = true;
+    botStartedInFallbackMode = mode === "fallback";
+    logEvent("telegram.bot.started", {
+      ownerId: BOT_INSTANCE_ID,
+      mode
+    });
+  } catch (err) {
+    if (err.response && err.response.error_code === 409) {
+      logEvent("telegram.bot.conflict", { ownerId: BOT_INSTANCE_ID, mode });
+    } else {
+      logError("telegram.bot.launch_error", err, { ownerId: BOT_INSTANCE_ID, mode });
+      throw err;
+    }
+  } finally {
+    botLaunchInFlight = false;
+  }
 }
 
 
@@ -885,22 +916,7 @@ export const startBot = () => {
       }
       botLeaseOwner = true;
 
-      if (!botStarted) {
-        botLaunchInFlight = true;
-        try {
-          await bot.launch();
-          botStarted = true;
-          logEvent("telegram.bot.started", { ownerId: BOT_INSTANCE_ID });
-        } catch (err) {
-          if (err.response && err.response.error_code === 409) {
-            logEvent("telegram.bot.conflict", { ownerId: BOT_INSTANCE_ID });
-          } else {
-            logError("telegram.bot.launch_error", err, { ownerId: BOT_INSTANCE_ID });
-          }
-        } finally {
-          botLaunchInFlight = false;
-        }
-      }
+      await launchBotIfNeeded("lease");
 
       if (!botHeartbeatTimer) {
         botHeartbeatTimer = setInterval(async () => {
@@ -920,6 +936,9 @@ export const startBot = () => {
       }
     } catch (error) {
       logError("telegram.bot.lease.claim_error", error, { ownerId: BOT_INSTANCE_ID });
+      if (!TELEGRAM_LEASE_REQUIRED) {
+        await launchBotIfNeeded("fallback");
+      }
     }
   };
 
@@ -937,8 +956,12 @@ export const stopBot = () => {
   if (botStarted) {
     bot.stop("LEASE_LOST");
     botStarted = false;
-    logEvent("telegram.bot.stopped", { ownerId: BOT_INSTANCE_ID });
+    logEvent("telegram.bot.stopped", {
+      ownerId: BOT_INSTANCE_ID,
+      mode: botStartedInFallbackMode ? "fallback" : "lease"
+    });
   }
+  botStartedInFallbackMode = false;
 };
 
 export const shutdownBotSupervisor = async () => {
