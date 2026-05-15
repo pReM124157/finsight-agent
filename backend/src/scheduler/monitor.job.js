@@ -1,10 +1,10 @@
 import cron from "node-cron";
 import supabase from "../services/supabase.service.js";
+import { runMorningBriefing } from "../scanner/morningScheduler.js";
 
 import { runRiskAgent } from "../agents/risk.agent.js";
 import { analyzePortfolio as runPortfolioAgent } from "../agents/portfolioAgent.js";
 import { runRebalancingAgent } from "../agents/rebalancing.agent.js";
-import { scannerAgent } from "../agents/scanner.agent.js";
 
 import { sendTelegramAlert } from "../services/alert.service.js";
 import { sendEmail, sendEmailAlert } from "../services/email.service.js";
@@ -13,6 +13,17 @@ import { updatePerformanceTracking } from "../agents/performanceTracker.agent.js
 import { masterAgent } from "../agents/master.agent.js";
 import { shouldSendAlert, saveAlert } from "../services/alertMemory.service.js";
 import bot from "../services/telegram.service.js";
+
+function buildMorningBriefingMessage(packet) {
+  const reportText = packet?.report?.report || "Morning briefing unavailable.";
+  return [
+    "FinSight Pro Morning Briefing",
+    "",
+    reportText,
+    "",
+    "Educational only. Not SEBI-registered investment advice."
+  ].join("\n");
+}
 
 export const runPortfolioMonitor = async () => {
   console.log("🚨 Running Portfolio Risk Monitor...");
@@ -122,26 +133,8 @@ export const startMonitoringJob = () => {
     async () => {
       console.log("⏰ Morning Scanner Alert Triggered");
       try {
-        const opportunities = await scannerAgent();
-        if (!opportunities.length) {
-          console.log("No opportunities found");
-          return;
-        }
-        let message = "🏆 TOP OPPORTUNITIES TODAY\n\n";
-        opportunities.forEach((stock, index) => {
-          message += `#${index + 1} ${stock.stock}\n`;
-          message += `📊 Decision: ${stock.decision} (${stock.confidenceScore}/10)\n`;
-          message += `💰 Price: ₹${stock.currentPrice}\n`;
-          message += `🎯 Entry Zone: ${stock.idealEntryZone}\n`;
-          message += `🛑 Stop Loss: ${stock.stopLoss}\n`;
-          message += `🎯 Target: ${stock.initialTarget}\n`;
-          message += `⚖️ R/R Ratio: ${stock.rewardRiskRatio}\n`;
-          message += `⚡ Urgency: ${stock.entryUrgency}\n`;
-          message += `🧠 Reason:\n${stock.entryReasoning}\n`;
-          message += `📌 Advice:\n${stock.finalExecutionAdvice}\n\n`;
-        });
-        message += "⚠️ For educational purposes only.\n";
-        message += "Not SEBI registered investment advice.";
+        const packet = await runMorningBriefing();
+        const message = buildMorningBriefingMessage(packet);
         
         await sendTelegramAlert(message);
         await sendEmailAlert(

@@ -12,7 +12,7 @@ export async function sendEmailAlert(subject, text) {
 /**
  * Sends an email using the Resend API to avoid SMTP network issues.
  */
-export async function sendEmail({ subject, text }) {
+export async function sendEmail({ subject, text, html }) {
   try {
     console.log("📨 RESEND EMAIL SEND STARTED TO:", process.env.TARGET_EMAIL);
     
@@ -23,7 +23,8 @@ export async function sendEmail({ subject, text }) {
       from: "FinSight AI <onboarding@resend.dev>",
       to: process.env.TARGET_EMAIL,
       subject,
-      text
+      text,
+      ...(html ? { html } : {})
     });
 
     if (error) {

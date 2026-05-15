@@ -1,6 +1,7 @@
 import { riskAgent } from "./risk.agent.js";
 import { generatePreMarketInsight } from "../services/premarket.service.js";
 import { portfolioAgent } from "./portfolioAgent.js";
+import { buildPortfolioReview } from "./portfolioReview.agent.js";
 import { decisionAgent } from "./decision.agent.js";
 import { rebalancingAgent } from "./rebalancing.agent.js";
 import { rankingAgent } from "./ranking.agent.js";
@@ -14,6 +15,7 @@ import { analyzeExitSignal } from "./exitSignal.agent.js";
 import { calculatePositionSize } from "./positionSizing.agent.js";
 import { analyzeRebalancing } from "./rebalancer.agent.js";
 import { getPortfolio } from "../services/portfolioMemory.service.js";
+import { formatPortfolioReview } from "../core/portfolioFormatter.js";
 import { logRecommendation, getLearningBoost } from "./performanceTracker.agent.js";
 import { analyzeEventRisk } from "./eventRisk.agent.js";
 import { 
@@ -576,61 +578,8 @@ Add a stock to start tracking.`.trim();
   }
 
   try {
-    let totalValue = 0;
-    let totalInvested = 0;
-    const sectorMap = {};
-
-    const enrichedHoldings = await Promise.all(holdings.map(async (h) => {
-      const data = await getLiveMarketData(h.symbol);
-      const currentPrice = data.currentPrice || h.avgPrice;
-      const invested = h.quantity * h.avgPrice;
-      const currentVal = h.quantity * currentPrice;
-      
-      // Fix 1 & 2: Correct PnL formula and Add Rupee amount
-      const pnlAmt = currentVal - invested;
-      const pnlPct = ((currentPrice - h.avgPrice) / h.avgPrice) * 100;
-      
-      totalValue += currentVal;
-      totalInvested += invested;
-
-      // Basic Sector Mapping
-      const sectorLookup = {
-        TCS: "IT", INFY: "IT", WIPRO: "IT", HCLTECH: "IT",
-        HDFCBANK: "Banking", ICICIBANK: "Banking", SBIN: "Banking",
-        RELIANCE: "Energy", ONGC: "Energy",
-        ITC: "FMCG", HUL: "FMCG",
-        TATAMOTORS: "Auto", "M&M": "Auto"
-      };
-      const sector = sectorLookup[h.symbol.toUpperCase()] || "Other";
-      
-      // Fix 4: Sector concentration weight-based
-      sectorMap[sector] = (sectorMap[sector] || 0) + currentVal;
-
-      return `${h.symbol}: ${pnlAmt >= 0 ? '+' : '-'}${Math.abs(pnlAmt).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)`;
-    }));
-
-    // Fix 3: Net PnL must be weighted
-    const netPnL = totalValue - totalInvested;
-    const netPct = (netPnL / totalInvested) * 100;
-    
-    // Determine Dominant Sector
-    let dominantSector = "Diversified";
-    let maxSectorVal = 0;
-    for (const [sector, val] of Object.entries(sectorMap)) {
-      if (val > maxSectorVal) {
-        maxSectorVal = val;
-        dominantSector = sector;
-      }
-    }
-    const sectorWeight = (maxSectorVal / totalValue);
-    const whatMatters = sectorWeight > 0.4 ? `Overexposed to ${dominantSector}.` : "Portfolio structure is balanced.";
-
-    return `
-Portfolio — Snapshot
-${enrichedHoldings.join("\n")}
-Net PnL: ${netPnL >= 0 ? '+' : '-'}${Math.abs(netPnL).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })} (${netPct >= 0 ? '+' : ''}${netPct.toFixed(1)}%)
-What matters: ${whatMatters}
-`.trim();
+    const review = await buildPortfolioReview(holdings);
+    return formatPortfolioReview(review);
   } catch (err) {
     console.error("PORTFOLIO_SNAPSHOT_ERROR:", err.message);
     return "Portfolio — Snapshot\nError calculating performance.\nWhat matters: Technical data sync in progress.";
