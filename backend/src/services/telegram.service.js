@@ -973,13 +973,32 @@ bot.on("text", async (ctx) => {
       const availabilityResult = await checkMarketAvailability(cleanTicker, { getLiveMarketData });
 
       if (availabilityResult.availability === MARKET_AVAILABILITY.PROVIDER_UNAVAILABLE) {
-        // Symbol EXISTS but market data is temporarily unavailable.
-        // NEVER show "invalid ticker" — that would be a semantic violation.
-        await send(
-          `⚠️ Market data for *${cleanTicker}* is temporarily unavailable.\n` +
-          `The symbol is valid — all data providers are currently unreachable.\n` +
-          `Please retry in a few minutes.`
-        );
+        // Try stale cache data from the live result before hard-failing
+        const liveData = availabilityResult.liveData || {};
+        const cacheTs = Number(liveData.timestamp || 0);
+        const ageSeconds = cacheTs > 0 ? Math.floor((Date.now() - cacheTs) / 1000) : Infinity;
+        const isMarketOpen = liveData.marketStatus?.isMarketOpen ?? false;
+        const stalePriceExists = Number(liveData.currentPrice || liveData.price || 0) > 0;
+
+        if (stalePriceExists && ageSeconds < Infinity) {
+          // Stale data exists — evaluate if it's acceptable under governance
+          const { buildStaleCachePolicy, buildDataStateMessage } = await import("./dataAvailability.service.js");
+          const policy = buildStaleCachePolicy({ cacheAgeSeconds: ageSeconds, isMarketOpen });
+          if (policy.acceptable) {
+            const stateMsg = buildDataStateMessage(policy.state, {
+              symbol: cleanTicker,
+              cacheAgeMinutes: Math.round(ageSeconds / 60)
+            });
+            if (stateMsg) await send(stateMsg);
+            // Proceed with degraded analysis using stale data
+            await performAnalysis(chatId, cleanTicker, footer);
+            return;
+          }
+        }
+
+        // No usable data at all — show institutional unavailability message
+        const { buildDataStateMessage, DATA_AVAILABILITY_STATES } = await import("./dataAvailability.service.js");
+        await send(buildDataStateMessage(DATA_AVAILABILITY_STATES.UNAVAILABLE, { symbol: cleanTicker }));
         return;
       }
 

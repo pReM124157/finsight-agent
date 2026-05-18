@@ -2,7 +2,7 @@ import YahooFinance from "yahoo-finance2";
 import { fetchIndianHolidays } from "./holiday.service.js";
 import { safeString, safeSubstring } from "../core/safety.js";
 import { getOrPopulateSharedCache, getSharedCache, setSharedCache } from "./sharedCache.service.js";
-import { withProviderGuard } from "./providerHealth.service.js";
+import { withProviderGuard, isProviderAuthFailure } from "./providerHealth.service.js";
 import { logError, logEvent, logMetric } from "./telemetry.service.js";
 import {
   CANONICAL_METRIC_REGISTRY,
@@ -12,9 +12,28 @@ import {
   crossProviderConsensus,
   validateFundamentalsSemantics
 } from "./canonicalSemantics.service.js";
+import {
+  buildStaleCachePolicy,
+  classifyPartialPayload,
+  determineDataAvailabilityState,
+  DATA_AVAILABILITY_STATES
+} from "./dataAvailability.service.js";
 
-const yahooFinance = new YahooFinance();
-// Global config removed to prevent startup crash
+const yahooFinance = new YahooFinance({
+  suppressNotices: ["yahooSurvey", "ripHistorical"]
+});
+
+// Warm Yahoo session at boot to pre-load crumb/cookie
+(async () => {
+  try {
+    await yahooFinance.search("RELIANCE");
+    logEvent("provider.yahoo.session_warmup.success", { ts: new Date().toISOString() });
+    console.log("[YAHOO] Session warmup success.");
+  } catch (err) {
+    logEvent("provider.yahoo.session_warmup.failed", { error: err?.message });
+    console.warn("[YAHOO] Session warmup failed:", err?.message);
+  }
+})();
 
 // --- Institutional Data Layer (Observability & Safety) ---
 export const dataMetrics = {
@@ -1052,17 +1071,23 @@ export async function getLiveMarketData(symbol) {
           let dataConfidence = "LIVE_VERIFIED";
           let completeness = "FULL";
 
-          // 2. PRIMARY FETCH (Yahoo) with Circuit Breaker
+          // 2. PRIMARY FETCH (Yahoo) with Circuit Breaker + auth detection
           const yahooAvailable = Date.now() >= yahooCooldownUntil;
+          let yahooAuthFailed = false;
           if (yahooAvailable) {
             for (const sym of symbolsToTry) {
+                const reqTs = Date.now();
                 try {
-                    console.log(`[DATA] attempt=yahoo symbol=${sym}`);
+                    logEvent("provider.request", { provider: "yahoo", symbol: sym, stage: "quote", ts: new Date().toISOString() });
+                    console.log(`[PROVIDER REQUEST] provider=yahoo symbol=${sym} stage=quote ts=${new Date().toISOString()}`);
                     const tempResult = await withProviderGuard("yahoo", async () =>
                       withTimeout(retry(() => yahooFinance.quote(sym), 1, 500), YAHOO_TIMEOUT_MS)
                     );
                     const resolvedYahooPrice = resolveBestPrice(tempResult);
+                    const latencyMs = Date.now() - reqTs;
                     if (tempResult && resolvedYahooPrice.value > 0) {
+                        logEvent("provider.response", { provider: "yahoo", symbol: sym, success: true, latencyMs });
+                        console.log(`[PROVIDER RESPONSE] provider=yahoo symbol=${sym} success=true latencyMs=${latencyMs}`);
                         result = tempResult;
                         fetchSymbol = sym;
                         priceSource = "YAHOO";
@@ -1071,8 +1096,18 @@ export async function getLiveMarketData(symbol) {
                         break;
                     }
                 } catch (e) {
-                    console.warn(`[DATA] source=yahoo symbol=${sym} status=fail error="${e.message}"`);
+                    const latencyMs = Date.now() - reqTs;
+                    const isAuth = isProviderAuthFailure(e);
+                    logEvent("provider.failure", { provider: "yahoo", symbol: sym, stage: "quote", error: e?.message, isAuth, latencyMs });
+                    console.warn(`[PROVIDER FAILURE] provider=yahoo symbol=${sym} stage=quote error="${e?.message}" isAuth=${isAuth}`);
                     logProviderError("yahoo", { stage: "quote", symbol: sym }, e);
+                    if (isAuth) {
+                      // Auth failure — skip all remaining Yahoo retries immediately
+                      yahooAuthFailed = true;
+                      logEvent("provider.yahoo.auth_failure", { symbol: sym, error: e?.message });
+                      console.warn(`[YAHOO] Auth failure detected. Skipping remaining Yahoo retries for ${upperSymbol}.`);
+                      break;
+                    }
                 }
                 await new Promise(r => setTimeout(r, 300));
             }
@@ -1148,8 +1183,32 @@ export async function getLiveMarketData(symbol) {
 
           if (!currentPrice || currentPrice === 0) {
               console.warn(`[FALLBACK] Data extraction failed for ${upperSymbol}`);
-              return createFallbackLiveData(upperSymbol);
+              // Try stale cache before giving up completely
+              const cached = await getHybridCache(cacheKey, "HIGH");
+              if (cached && cached.currentPrice > 0 && cached.timestamp) {
+                const ageS = Math.floor((Date.now() - cached.timestamp) / 1000);
+                const policy = buildStaleCachePolicy({ cacheAgeSeconds: ageS, isMarketOpen: marketStatus.isMarketOpen });
+                if (policy.acceptable) {
+                  logEvent("data.availability.stale", { symbol: upperSymbol, ageSeconds: ageS, state: policy.state });
+                  console.log(`[STALE CACHE] Rescued ${upperSymbol} from stale cache. Age=${ageS}s state=${policy.state}`);
+                  return { ...cached, dataAge: ageS, dataConfidence: policy.state, staleData: true, staleWarning: policy.warning, degradedMode: true };
+                }
+              }
+              return createFallbackLiveData(upperSymbol, { degradedMode: true });
           }
+
+          const availabilityState = determineDataAvailabilityState({
+              providerSuccessCount: priceSource !== "FAILED" ? 1 : 0,
+              providerFailureCount: priceSource === "FAILED" ? 1 : 0,
+              staleCacheAvailable: false,
+              cacheAgeSeconds: 0,
+              isMarketOpen: marketStatus.isMarketOpen,
+              partialPayload: completeness === "PARTIAL",
+              allProvidersCoolingDown: false,
+              snapshotAvailable: false,
+              symbol: upperSymbol,
+              provider: priceSource
+          });
 
           const finalData = {
               symbol: fetchSymbol || upperSymbol,
@@ -1168,7 +1227,14 @@ export async function getLiveMarketData(symbol) {
               fetchDuration,
               dataAge: 0,
               timestamp: Date.now(),
-              status: "success"
+              status: "success",
+              availabilityState: availabilityState.state,
+              degradedMode: availabilityState.degraded,
+              dataIntegrity: {
+                quote: currentPrice > 0,
+                fundamentals: completeness !== "PARTIAL",
+                historical: true // assessed separately by getHistoricalCandles
+              }
           };
 
           logMetric("provider.market_data.latency_ms", fetchDuration, {
