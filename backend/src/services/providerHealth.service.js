@@ -193,6 +193,10 @@ export async function recoverProviderHealth(provider) {
   return false;
 }
 
+export function resetProviderHealthForTest(provider) {
+  localProviderHealth.delete(provider);
+}
+
 // ─── WITH PROVIDER GUARD ──────────────────────────────────────────────────────
 
 export async function withProviderGuard(provider, operation, options = {}) {

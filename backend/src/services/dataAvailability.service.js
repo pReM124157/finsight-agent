@@ -190,8 +190,13 @@ export function determineDataAvailabilityState({
 
   // ── 1. Live provider success ─────────────────────────────────────────────
   if (providerSuccessCount > 0 && providerFailureCount === 0) {
-    state = DATA_AVAILABILITY_STATES.LIVE;
-    explanation = "Primary provider delivered live data. Full institutional reliability.";
+    if (partialPayload) {
+      state = DATA_AVAILABILITY_STATES.PARTIAL_DATA;
+      explanation = "Live price available. Fundamental data layer temporarily degraded. Technical analysis proceeds.";
+    } else {
+      state = DATA_AVAILABILITY_STATES.LIVE;
+      explanation = "Primary provider delivered live data. Full institutional reliability.";
+    }
   }
 
   // ── 2. Live failed + stale cache ────────────────────────────────────────
@@ -267,54 +272,33 @@ export function buildDataStateMessage(state, { symbol, cacheAgeMinutes, lastUpda
 
   switch (state) {
     case DATA_AVAILABILITY_STATES.LIVE:
-      return null; // No message needed — analysis proceeds normally
+      return null;
 
     case DATA_AVAILABILITY_STATES.DELAYED_LIVE:
-      return (
-        `⚠️ *Market State: DELAYED LIVE DATA*\n` +
-        `Data delayed due to provider instability. Last update: ${ageStr}.\n` +
-        `Analysis proceeds with reduced confidence.`
-      );
-
     case DATA_AVAILABILITY_STATES.STALE_CACHE:
       return (
-        `⚠️ *Market State: STALE CACHE SNAPSHOT*\n` +
-        `Live provider temporarily unreachable. Serving cached data from ${ageStr}.\n` +
-        `${lastStr}\n` +
-        `Fundamental analysis intact. Technical signals may lag current price action.`
+        `⚠️ *Market State: DELAYED LIVE DATA*\n` +
+        `Using delayed institutional market snapshot.`
       );
 
-    case DATA_AVAILABILITY_STATES.PARTIAL_DATA: {
-      const missing = missingComponents.length ? missingComponents.join(", ") : "fundamental metrics";
+    case DATA_AVAILABILITY_STATES.PARTIAL_DATA:
       return (
         `⚠️ *Market State: PARTIAL MARKET DATA*\n` +
-        `Live price confirmed. Fundamental layer temporarily degraded (missing: ${missing}).\n` +
-        `Technical analysis available. Fundamental scoring uses available data only.`
-      );
-    }
-
-    case DATA_AVAILABILITY_STATES.DEGRADED_PROVIDER:
-      return (
-        `⚠️ *Market State: DEGRADED PROVIDER*\n` +
-        `All data providers are in cooldown recovery for *${sym}*.\n` +
-        `System will auto-retry. Last known data is being used where available.\n` +
-        `No active trading recommendation should be executed in this state.`
+        `Fundamental intelligence temporarily unavailable.\n` +
+        `Technical and adaptive systems remain operational.`
       );
 
     case DATA_AVAILABILITY_STATES.READ_ONLY_SNAPSHOT:
       return (
         `⚠️ *Market State: READ-ONLY SNAPSHOT MODE*\n` +
-        `Live data unavailable for *${sym}*. Serving last known session close.\n` +
-        `Analysis is indicative only. ${lastStr}\n` +
-        `Do not execute trades based on snapshot data.`
+        `Replay reliability temporarily constrained.`
       );
 
+    case DATA_AVAILABILITY_STATES.DEGRADED_PROVIDER:
     case DATA_AVAILABILITY_STATES.UNAVAILABLE:
       return (
         `❌ *Market Data Unavailable*\n` +
-        `*${sym}* is a valid symbol — but all data providers are temporarily unreachable and no cached data exists.\n` +
-        `This is a provider outage, not a symbol error.\n` +
-        `Please retry in a few minutes.`
+        `Institutional market infrastructure temporarily unavailable.`
       );
 
     default:

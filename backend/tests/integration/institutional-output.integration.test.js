@@ -3,6 +3,8 @@
  * Validates the institutional intelligence interpretation engine
  */
 
+import { describe, test, expect } from "vitest";
+
 import {
   classifyInstitutionalConfidence,
   computeFundamentalQualityScore,

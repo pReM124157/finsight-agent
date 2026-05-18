@@ -8,6 +8,7 @@ import webhookRouter from "./routes/webhook.js";
 import analyticsRouter from "./routes/analytics.routes.js";
 import backtestingRouter from "./routes/backtesting.routes.js";
 import adaptiveRouter from "./routes/adaptive.routes.js";
+import infraRouter from "./routes/infra.routes.js";
 import { buildAnalysisContext } from "./core/analysisContext.js";
 import { createTraceId, logError, logEvent } from "./services/telemetry.service.js";
 
@@ -85,6 +86,7 @@ app.use('/webhook', webhookRouter);
 app.use('/analytics', analyticsRouter);
 app.use('/backtesting', backtestingRouter);
 app.use('/adaptive', adaptiveRouter);
+app.use('/infra', infraRouter);
 app.use(express.json());
 
 

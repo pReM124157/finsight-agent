@@ -35,14 +35,60 @@ const yahooFinance = new YahooFinance({
   }
 })();
 
+// STEP 2 — Boot-time provider config verification
+// Expected output: alpha: true, twelvedata: true, finnhub: true
+// If any shows false, the env variable is not mounted correctly.
+console.log("[PROVIDER CONFIG]", {
+  alpha:      !!process.env.ALPHA_VANTAGE_API_KEY,
+  twelvedata: !!process.env.TWELVEDATA_API_KEY,
+  finnhub:    !!process.env.FINNHUB_API_KEY
+});
+
 // --- Institutional Data Layer (Observability & Safety) ---
 export const dataMetrics = {
   yahooSuccess: 0,
   yahooFail: 0,
   alphaSuccess: 0,
+  twelvedataSuccess: 0,
+  finnhubSuccess: 0,
   cacheHit: 0,
   lastGlobalCall: 0
 };
+
+// STEP 5 — Snapshot metadata builder
+// Governs whether stale data can be served and what message to surface.
+export function buildSnapshotMetadata(payload, isMarketOpen) {
+  const ts = Number(payload?.timestamp || 0);
+  const now = Date.now();
+  const delayedBySeconds = ts > 0 ? Math.floor((now - ts) / 1000) : null;
+  const snapshotTimestamp = ts > 0 ? new Date(ts).toISOString() : null;
+
+  // Stale thresholds
+  const STALE_MARKET_OPEN_LIMIT_S  = 15 * 60;  // 15 min
+  const STALE_MARKET_CLOSED_LIMIT_S = 24 * 60 * 60; // 24h
+
+  let staleData = false;
+  let degradedMode = false;
+
+  if (delayedBySeconds !== null) {
+    if (isMarketOpen) {
+      staleData = delayedBySeconds > STALE_MARKET_OPEN_LIMIT_S;
+      degradedMode = staleData;
+    } else {
+      staleData = delayedBySeconds > STALE_MARKET_CLOSED_LIMIT_S;
+      degradedMode = false; // Market closed — stale is acceptable, not degraded
+    }
+  }
+
+  return {
+    staleData,
+    delayedBySeconds,
+    snapshotTimestamp,
+    degradedMode,
+    isMarketOpen,
+    executionAllowed: !staleData || !isMarketOpen
+  };
+}
 
 const dataCache = new Map();
 const inflightRequests = new Map();
@@ -334,6 +380,7 @@ function createFallbackOverview(symbol, extra = {}) {
     Sector: "Fallback",
     source: "fallback",
     status: "FALLBACK_SAFE",
+    dataIntegrity: { fundamentals: false },
     ...extra
   };
 }
@@ -395,7 +442,8 @@ function normalizeAlphaOverviewPayload(payload = {}, symbol) {
     EarningsDate: payload.LatestQuarter || null,
     source: "alpha_vantage",
     status: "success",
-    originalSymbol: symbol
+    originalSymbol: symbol,
+    dataIntegrity: { fundamentals: true }
   };
 }
 
@@ -443,7 +491,8 @@ function normalizeFinnhubOverviewPayload({ profile = {}, metrics = {} } = {}, sy
     EarningsDate: null,
     source: "finnhub",
     status: "success",
-    originalSymbol: symbol
+    originalSymbol: symbol,
+    dataIntegrity: { fundamentals: true }
   };
 }
 
@@ -726,7 +775,8 @@ export async function getCompanyOverview(symbol) {
             Sector: assetProfile.sector ?? null,
             Industry: assetProfile.industry ?? null,
             BusinessSummary: assetProfile.longBusinessSummary ?? null,
-            EarningsDate: calendarEvents?.earnings?.earningsDate?.[0] ?? null
+            EarningsDate: calendarEvents?.earnings?.earningsDate?.[0] ?? null,
+            dataIntegrity: { fundamentals: true }
           };
 
           console.log("FINAL OVERVIEW:", companyOverview);
@@ -1263,6 +1313,106 @@ export async function getLiveMarketData(symbol) {
   });
 }
 
+// STEP 3 — TwelveData historical candle fetcher (fallback for Yahoo failures)
+async function twelveDataHistoricalFetch(symbol, days = 90) {
+  try {
+    const apiKey = process.env.TWELVEDATA_API_KEY;
+    if (!apiKey || apiKey === "YOUR_TWELVEDATA_KEY_HERE") {
+      console.warn("[FALLBACK] TwelveData API key not configured. Skipping historical fallback.");
+      return null;
+    }
+    const baseSymbol = toBaseTicker(symbol);
+    const endDate = new Date().toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const exchanges = ["NSE", "BSE"];
+
+    for (const exchange of exchanges) {
+      try {
+        const url =
+          `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(baseSymbol)}` +
+          `&exchange=${exchange}&interval=1day&start_date=${startDate}&end_date=${endDate}` +
+          `&outputsize=500&order=ASC&apikey=${apiKey}`;
+
+        const payload = await withProviderGuard("twelvedata", async () =>
+          fetchJsonWithTimeout(url, {}, HTTP_PROVIDER_TIMEOUT_MS)
+        );
+
+        if (payload?.status === "error" || !Array.isArray(payload?.values)) continue;
+
+        const candles = payload.values
+          .map((v) => ({
+            date: new Date(v.datetime),
+            open: Number(v.open),
+            high: Number(v.high),
+            low: Number(v.low),
+            close: Number(v.close),
+            volume: Number(v.volume || 0)
+          }))
+          .filter(isValidHistoricalCandle);
+
+        if (candles.length >= 20) {
+          dataMetrics.twelvedataSuccess++;
+          logEvent("provider.historical.twelvedata.success", { symbol, exchange, count: candles.length });
+          console.log(`[HISTORICAL] source=twelvedata symbol=${symbol} exchange=${exchange} candles=${candles.length}`);
+          return candles;
+        }
+      } catch (err) {
+        logProviderError("twelvedata", { stage: "historical-attempt", symbol, exchange }, err);
+      }
+    }
+  } catch (err) {
+    logProviderError("twelvedata", { stage: "historical", symbol }, err);
+  }
+  return null;
+}
+
+// STEP 3 — Alpha Vantage daily time-series historical fetcher
+async function alphaHistoricalFetch(symbol, days = 90) {
+  try {
+    const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+    if (!apiKey) {
+      console.warn("[FALLBACK] Alpha Vantage API key missing. Skipping historical fallback.");
+      return null;
+    }
+    const avSymbol = toAlphaSymbol(symbol);
+    const outputSize = days <= 100 ? "compact" : "full";
+    const url =
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(avSymbol)}` +
+      `&outputsize=${outputSize}&apikey=${apiKey}`;
+
+    const payload = await withProviderGuard("alpha_vantage", async () =>
+      fetchJsonWithTimeout(url, {}, HTTP_PROVIDER_TIMEOUT_MS)
+    );
+
+    const timeSeries = payload?.["Time Series (Daily)"];
+    if (!timeSeries || typeof timeSeries !== "object") return null;
+
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const candles = Object.entries(timeSeries)
+      .filter(([dateStr]) => new Date(dateStr).getTime() >= cutoff)
+      .map(([dateStr, v]) => ({
+        date: new Date(dateStr),
+        open: Number(v["1. open"]),
+        high: Number(v["2. high"]),
+        low: Number(v["3. low"]),
+        close: Number(v["4. close"]),
+        volume: Number(v["5. volume"] || 0)
+      }))
+      .filter(isValidHistoricalCandle)
+      .sort((a, b) => a.date - b.date);
+
+    if (candles.length >= 20) {
+      dataMetrics.alphaSuccess++;
+      logEvent("provider.historical.alpha.success", { symbol, count: candles.length });
+      console.log(`[HISTORICAL] source=alpha symbol=${symbol} candles=${candles.length}`);
+      return candles;
+    }
+  } catch (err) {
+    logProviderError("alpha", { stage: "historical", symbol }, err);
+  }
+  return null;
+}
+
 export async function getHistoricalCandles(symbol, options = {}) {
   const upperSymbol = normalizeSymbol(symbol);
   if (!upperSymbol) return [];
@@ -1290,6 +1440,7 @@ export async function getHistoricalCandles(symbol, options = {}) {
       CACHE_GROUP_HISTORICAL,
       ttlSecondsForQuality("HIGH"),
       async () => {
+        // ── HISTORICAL PROVIDER 1: Yahoo ─────────────────────────────
         const symbolsToTry = buildSymbolVariants(upperSymbol);
         for (const sym of symbolsToTry) {
           try {
@@ -1298,13 +1449,30 @@ export async function getHistoricalCandles(symbol, options = {}) {
             );
             if (Array.isArray(tempHistory) && tempHistory.length >= 20) {
               const cleaned = tempHistory.filter(isValidHistoricalCandle);
-              if (cleaned.length >= 20) return cleaned;
+              if (cleaned.length >= 20) {
+                console.log(`[HISTORICAL] source=yahoo symbol=${sym} candles=${cleaned.length}`);
+                return cleaned;
+              }
               logMetric("provider.historical_candles.filtered_invalid", tempHistory.length - cleaned.length, { symbol: sym });
             }
           } catch (error) {
             logProviderError("yahoo", { stage: "historical", symbol: sym }, error);
           }
         }
+
+        // ── HISTORICAL PROVIDER 2: TwelveData ────────────────────────
+        console.log(`[HISTORICAL] Yahoo exhausted for ${upperSymbol}. Trying TwelveData.`);
+        const tdCandles = await twelveDataHistoricalFetch(upperSymbol, Math.min(days, 365));
+        if (tdCandles && tdCandles.length >= 20) return tdCandles;
+
+        // ── HISTORICAL PROVIDER 3: Alpha Vantage ─────────────────────
+        console.log(`[HISTORICAL] TwelveData exhausted for ${upperSymbol}. Trying Alpha Vantage.`);
+        const alphaCandles = await alphaHistoricalFetch(upperSymbol, Math.min(days, 365));
+        if (alphaCandles && alphaCandles.length >= 20) return alphaCandles;
+
+        // ── All providers exhausted ───────────────────────────────────
+        logEvent("provider.historical.all_exhausted", { symbol: upperSymbol, days });
+        console.warn(`[HISTORICAL] All providers exhausted for ${upperSymbol}. Returning empty.`);
         return [];
       },
       {
@@ -1313,7 +1481,12 @@ export async function getHistoricalCandles(symbol, options = {}) {
       }
     );
 
-    await setHybridCache(cacheKey, CACHE_GROUP_HISTORICAL, candles, "HIGH");
+    if (Array.isArray(candles) && candles.length > 0) {
+      await setHybridCache(cacheKey, CACHE_GROUP_HISTORICAL, candles, "HIGH");
+    } else {
+      // Emit telemetry on cache write skip (empty result)
+      logEvent("cache.write.skipped", { cacheKey, reason: "empty_historical_result" });
+    }
     return Array.isArray(candles) ? candles : [];
   });
 }
