@@ -582,6 +582,16 @@ bot.command('subscribe', async (ctx) => {
 
 bot.command('cancel', async (ctx) => {
   const chatId = ctx.chat.id.toString();
+  const activeSession = await getState("portfolio_add_session", chatId);
+  console.log("[CANCEL ROUTE]", activeSession?.mode);
+
+  if (activeSession?.mode === "portfolio_add") {
+    await deleteState("portfolio_add_session", chatId);
+    console.log("[SESSION CANCELLED]", chatId);
+    await ctx.reply("Portfolio add session cancelled.");
+    return;
+  }
+
   const { data } = await supabase
     .from('subscribers')
     .select('expires_at')
@@ -823,13 +833,15 @@ bot.on("text", async (ctx) => {
     const lowerText = text.toLowerCase();
 
     // ── STRICT COMMAND-FIRST ROUTING (NO AI FALLTHROUGH) ───────────
-    if (text.trim().startsWith("/cancel")) {
+    const activePortfolioAddSession = await getState("portfolio_add_session", chatId);
+    if (text.trim() === "/cancel" && activePortfolioAddSession?.mode === "portfolio_add") {
+      console.log("[CANCEL ROUTE]", activePortfolioAddSession?.mode);
       await deleteState("portfolio_add_session", chatId);
+      console.log("[SESSION CANCELLED]", chatId);
       await send("Portfolio add session cancelled.");
       return;
     }
 
-    const activePortfolioAddSession = await getState("portfolio_add_session", chatId);
     if (activePortfolioAddSession?.mode === "portfolio_add") {
       if (!isValidPositiveInteger(text)) {
         const targetSymbol = activePortfolioAddSession.missingSymbols?.[activePortfolioAddSession.currentIndex] || "current symbol";
