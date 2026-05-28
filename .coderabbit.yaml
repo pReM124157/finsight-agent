@@ -3,11 +3,7 @@
 language: "en-US"
 early_access: false
 
-tone_instructions: >
-  Review this repository as a senior backend/fintech infrastructure engineer.
-  Be strict about scheduler duplication, financial-data safety, invalid price handling,
-  DB write safety, audit pollution, and production/test-data separation.
-  Do not suggest changes that weaken deterministic safety checks.
+tone_instructions: "Review as a strict backend/fintech engineer. Focus on scheduler duplication, DB safety, market-data validation, and audit pollution."
 
 reviews:
   profile: "assertive"
