@@ -365,6 +365,94 @@ function isValidPositiveInteger(text = "") {
   return Number.isInteger(qty) && qty > 0;
 }
 
+function extractIndexPriceAndChange(result) {
+  if (!result) return { price: null, change: null };
+  const price = Number(
+    result.currentPrice ??
+    result.price ??
+    result.regularMarketPrice ??
+    result.lastPrice ??
+    0
+  );
+  
+  let change = null;
+  const rawChangePercent = result.changePercent ?? result.regularMarketChangePercent ?? result.percentChange ?? result.change;
+  if (rawChangePercent !== undefined && rawChangePercent !== null) {
+    change = Number(rawChangePercent);
+  } else {
+    const prevClose = Number(result.regularMarketPreviousClose ?? result.previousClose ?? 0);
+    if (price > 0 && prevClose > 0) {
+      change = ((price - prevClose) / prevClose) * 100;
+    }
+  }
+
+  return {
+    price: price > 0 ? price : null,
+    change: Number.isFinite(change) ? change : null
+  };
+}
+
+async function buildMarketOverviewText() {
+  let niftyText = "NIFTY 50: Unavailable safely";
+  let sensexText = "SENSEX: Unavailable safely";
+  let niftyChange = null;
+  let sensexChange = null;
+  let dataSource = "Yahoo";
+
+  try {
+    const niftyData = await getLiveMarketData("^NSEI");
+    const extractedNifty = extractIndexPriceAndChange(niftyData);
+    if (extractedNifty.price !== null) {
+      const formattedChange = extractedNifty.change !== null ? `${extractedNifty.change >= 0 ? "+" : ""}${extractedNifty.change.toFixed(2)}%` : "N/A";
+      niftyText = `NIFTY 50: ${extractedNifty.price.toLocaleString("en-IN")} | ${formattedChange}`;
+      niftyChange = extractedNifty.change;
+      if (niftyData.priceSource) {
+        dataSource = niftyData.priceSource;
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching NIFTY:", err);
+  }
+
+  try {
+    const sensexData = await getLiveMarketData("^BSESN");
+    const extractedSensex = extractIndexPriceAndChange(sensexData);
+    if (extractedSensex.price !== null) {
+      const formattedChange = extractedSensex.change !== null ? `${extractedSensex.change >= 0 ? "+" : ""}${extractedSensex.change.toFixed(2)}%` : "N/A";
+      sensexText = `SENSEX: ${extractedSensex.price.toLocaleString("en-IN")} | ${formattedChange}`;
+      sensexChange = extractedSensex.change;
+      if (sensexData.priceSource) {
+        dataSource = sensexData.priceSource;
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching SENSEX:", err);
+  }
+
+  const marketState = getMarketStateIST();
+  const stateLabel = marketState.open ? "Open" : "Closed / Last close data";
+
+  let shortViewText = "Market tone is neutral today.";
+  if (niftyChange !== null && sensexChange !== null) {
+    if (niftyChange > 0.3 && sensexChange > 0.3) {
+      shortViewText = "Market tone is positive today as both NIFTY and SENSEX are trading higher.";
+    } else if (niftyChange < -0.3 && sensexChange < -0.3) {
+      shortViewText = "Market tone is weak today as both NIFTY and SENSEX are trading lower.";
+    } else {
+      shortViewText = "Market tone is neutral today with mixed or sideways action.";
+    }
+  }
+
+  return `📊 *Market Overview*\n\n` +
+         `• ${niftyText}\n` +
+         `• ${sensexText}\n` +
+         `• Market State: ${stateLabel}\n` +
+         `• Data Source: ${dataSource}\n\n` +
+         `Short View: ${shortViewText}\n` +
+         `⚠️ Educational only. Not financial advice.`;
+}
+
+
 async function executePortfolioBatchAdd(chatId, rawEntries = []) {
   const seen = new Set();
   const entries = [];
@@ -2080,7 +2168,30 @@ bot.on("text", async (ctx) => {
         return;
       }
 
-      if (routed.intent === "MARKET_OVERVIEW" || routed.intent === "MACRO_QUERY") {
+      if (routed.intent === "MARKET_OVERVIEW") {
+        const overviewText = await buildMarketOverviewText();
+        await send(overviewText, { parse_mode: "Markdown" });
+        return;
+      }
+
+      if (routed.intent === "MACRO_QUERY") {
+        const lowerText = text.toLowerCase();
+        const isIndexQuery =
+          lowerText.includes("nifty") ||
+          lowerText.includes("sensex") ||
+          lowerText.includes("banknifty") ||
+          lowerText.includes("bank nifty") ||
+          lowerText.includes("market") ||
+          routed.symbols.includes("NIFTY") ||
+          routed.symbols.includes("SENSEX") ||
+          routed.symbols.includes("BANKNIFTY");
+
+        if (isIndexQuery) {
+          const overviewText = await buildMarketOverviewText();
+          await send(overviewText, { parse_mode: "Markdown" });
+          return;
+        }
+
         await send("Market overview is available through /sector, /scanner, or your existing macro flow while natural-language market routing is being connected.");
         return;
       }
