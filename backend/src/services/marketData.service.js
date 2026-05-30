@@ -1256,20 +1256,42 @@ export async function getLiveMarketData(symbol) {
 
       // 1. CHECK CACHE (Institutional Guard)
       const cached = await getHybridCache(cacheKey, "HIGH");
-          if (cached) {
-        const age = Math.floor((Date.now() - cached.timestamp) / 1000);
-        const shouldBypassCache = marketStatus.isPreMarket || marketStatus.isPostMarket;
-        if (!shouldBypassCache) {
-          console.log(`[CACHE] hit symbol=${upperSymbol} age=${age}s`);
-          const staleLiveData = marketStatus.isMarketOpen && age > 300;
-          if (staleLiveData) {
-            console.warn(`[DATA] stale live cache symbol=${upperSymbol} age=${age}s`);
-          }
-          return { ...cached, dataAge: age, dataConfidence: "CACHED", staleData: staleLiveData };
-        }
-        console.log(
-          `[CACHE] bypass symbol=${upperSymbol} age=${formatCacheAge(age)} reason=${marketStatus.isPostMarket ? "post-market" : "pre-market"}`
+      if (cached) {
+        const cachedPrice = toPositiveNumber(
+          cached.currentPrice ||
+          cached.regularMarketPrice ||
+          cached.price ||
+          cached.chosenPrice
         );
+        const rawAge = Number(cached.timestamp) > 0
+          ? Math.floor((Date.now() - Number(cached.timestamp)) / 1000)
+          : NaN;
+        const validCachedAge = Number.isFinite(rawAge) && rawAge >= 0;
+        const validCachedPrice = Number.isFinite(cachedPrice) && cachedPrice > 0;
+
+        if (!validCachedPrice || !validCachedAge) {
+          console.warn("[CACHE] invalid live quote ignored", {
+            symbol: upperSymbol,
+            cacheKey,
+            cachedPrice: cachedPrice || null,
+            age: validCachedAge ? rawAge : null,
+            reason: !validCachedPrice ? "invalid_price" : "invalid_age"
+          });
+        } else {
+          const age = rawAge;
+          const shouldBypassCache = marketStatus.isPreMarket || marketStatus.isPostMarket;
+          if (!shouldBypassCache) {
+            console.log(`[CACHE] hit symbol=${upperSymbol} age=${age}s`);
+            const staleLiveData = marketStatus.isMarketOpen && age > 300;
+            if (staleLiveData) {
+              console.warn(`[DATA] stale live cache symbol=${upperSymbol} age=${age}s`);
+            }
+            return { ...cached, dataAge: age, dataConfidence: "CACHED", staleData: staleLiveData };
+          }
+          console.log(
+            `[CACHE] bypass symbol=${upperSymbol} age=${formatCacheAge(age)} reason=${marketStatus.isPostMarket ? "post-market" : "pre-market"}`
+          );
+        }
       }
 
       const finalData = await getOrPopulateSharedCache(
