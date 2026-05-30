@@ -38,14 +38,15 @@ app.listen(PORT, "0.0.0.0", () => {
       // Dynamic imports to prevent top-level blocking
       const telegramModule = await import("./services/telegram.service.js");
       const { startBot } = telegramModule;
+
+      if (RENDER_DEMO_MODE) {
+        startBot();
+        console.log("🧪 Render demo mode enabled — Telegram bot running, all heavy imports/schedulers skipped.");
+        return;
+      }
+
       const telegramBot = telegramModule.default;
       const { default: supabase } = await import("./services/supabase.service.js");
-      const { startPortfolioScheduler } = await import("./scheduler/portfolio.scheduler.js");
-      const { startMonitoringJob } = await import("./scheduler/monitor.job.js");
-      const { startDailyHook } = await import("./scheduler/dailyHook.scheduler.js");
-      const { startSpikeHook } = await import("./scheduler/spikeHook.scheduler.js");
-      const { startRecommendationTrackingScheduler } = await import("./scheduler/recommendationTracking.scheduler.js");
-      const { startStatisticalValidationScheduler } = await import("./scheduler/statisticalValidation.scheduler.js");
       const { startPublicAnalyticsScheduler } = await import("./scheduler/publicAnalytics.scheduler.js");
       const { startBacktestingScheduler } = await import("./scheduler/backtesting.scheduler.js");
       const { startAdaptiveIntelligenceScheduler } = await import("./scheduler/adaptiveIntelligence.scheduler.js");
@@ -377,10 +378,12 @@ app.listen(PORT, "0.0.0.0", () => {
 
       startBot();
 
-      if (RENDER_DEMO_MODE) {
-        console.log("🧪 Render demo mode enabled — Telegram bot running, heavy schedulers skipped.");
-        return;
-      }
+      const { startPortfolioScheduler } = await import("./scheduler/portfolio.scheduler.js");
+      const { startMonitoringJob } = await import("./scheduler/monitor.job.js");
+      const { startDailyHook } = await import("./scheduler/dailyHook.scheduler.js");
+      const { startSpikeHook } = await import("./scheduler/spikeHook.scheduler.js");
+      const { startRecommendationTrackingScheduler } = await import("./scheduler/recommendationTracking.scheduler.js");
+      const { startStatisticalValidationScheduler } = await import("./scheduler/statisticalValidation.scheduler.js");
 
       await staggerSchedulerExecution("portfolio_surveillance", async () => startPortfolioScheduler());
       await staggerSchedulerExecution("monitoring", async () => startMonitoringJob());
