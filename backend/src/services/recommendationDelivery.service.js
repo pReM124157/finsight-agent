@@ -294,7 +294,11 @@ function isTestRecommendation(row = {}) {
     haystack.includes("MANUAL:TEST-RECOMMENDATION-DELIVERY-SEND") ||
     haystack.includes("MANUAL.TEST.ROUTE") ||
     haystack.includes("TEST_SIGNAL") ||
-    haystack.includes("TEST-REC-")
+    haystack.includes("TEST-REC-") ||
+    haystack.includes("COPILOT.DELIVERY") ||
+    haystack.includes("PRODUCTION.DELIVERY.VERIFICATION") ||
+    haystack.includes("DELIVERY.VERIFY") ||
+    haystack.includes("DELIVERY VERIFICATION")
   );
 }
 
@@ -319,6 +323,10 @@ export function evaluateRecommendationEligibility(row, { runtimeState } = {}) {
   const action = String(
     row.action || row.recommendation_type || ""
   ).toUpperCase();
+
+  if (action === "PENDING_EXECUTION" && process.env.ALLOW_PENDING_EXECUTION_DELIVERY !== "true") {
+    return { eligible: false, suppressionReason: "PENDING_EXECUTION_DELIVERY_BLOCKED" };
+  }
 
   if (action !== "BUY" && action !== "SELL" && action !== "PENDING_EXECUTION") {
     return { eligible: false, suppressionReason: "NON_ACTIONABLE_RECOMMENDATION" };
