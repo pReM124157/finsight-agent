@@ -1521,40 +1521,12 @@ export async function getLiveMarketData(symbol) {
               }
             }
             const staleRescue = await getHybridCache(cacheKey, "HIGH");
-
-            const stalePrice =
-              toPositiveNumber(staleRescue?.currentPrice) ||
-              toPositiveNumber(staleRescue?.price) ||
-              toPositiveNumber(staleRescue?.regularMarketPrice) ||
-              toPositiveNumber(staleRescue?.regularMarketPreviousClose) ||
-              toPositiveNumber(staleRescue?.previousClose) ||
-              toPositiveNumber(staleRescue?.close);
-
-            if (staleRescue && stalePrice > 0 && staleRescue.timestamp) {
+            if (staleRescue && staleRescue.currentPrice > 0 && staleRescue.timestamp) {
               const ageS = Math.floor((Date.now() - staleRescue.timestamp) / 1000);
               const policy = buildStaleCachePolicy({ cacheAgeSeconds: safeCacheAgeSeconds(ageS), isMarketOpen: marketStatus.isMarketOpen });
               if (policy.acceptable) {
                 logEvent("data.availability.stale", { symbol: upperSymbol, ageSeconds: ageS, state: policy.state });
-                return {
-                  ...staleRescue,
-
-                  currentPrice: stalePrice,
-                  price: stalePrice,
-                  regularMarketPrice: stalePrice,
-                  chosenPrice: stalePrice,
-                  chosenPriceField: "STALE_CACHE_RESCUE",
-
-                  dataAge: ageS,
-                  dataConfidence: policy.state,
-                  priceSource: "STALE_CACHE_RESCUE",
-                  staleData: true,
-                  degradedMode: true,
-                  reliability: "DEGRADED",
-                  dataQuality: "STALE_RESCUE",
-
-                  explanation:
-                    "Live provider price unavailable. Using last verified cached/close price with degraded reliability."
-                };
+                return { ...staleRescue, dataAge: ageS, dataConfidence: policy.state, staleData: true, degradedMode: true };
               }
               staleCacheDiagnostic = {
                 available: true,
