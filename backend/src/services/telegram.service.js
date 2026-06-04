@@ -76,6 +76,8 @@ import {
 import { computeCompositeScores } from "../scoring/compositeScoreEngine.js";
 import { getInstitutionalRuntimeSnapshot } from "./institutionalStatus.service.js";
 import { reconcileSubscriberEntitlement } from "./subscriptionReconciliation.service.js";
+import { classifyIntentWithHermes } from "./hermesIntent.service.js";
+import { createPriceAlert } from "./priceAlert.service.js";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const TELEGRAM_RETRY_DELAYS_MS = [5000, 15000, 30000, 60000];
@@ -194,6 +196,20 @@ function scheduleBotLaunchRetry(reason = "LAUNCH_FAILED") {
   }, delayMs);
 }
 
+function shouldBypassConnectivityPreflight(mode = "lease") {
+  if (process.env.TELEGRAM_SKIP_CONNECTIVITY_CHECK === "true") {
+    return true;
+  }
+
+  if (!TELEGRAM_LEASE_REQUIRED) {
+    return true;
+  }
+
+  // In fallback mode we already decided not to block on lease/cache health.
+  // Let Telegraf attempt a real launch instead of failing early on a preflight probe.
+  return mode === "fallback";
+}
+
 export async function verifyTelegramConnectivity(timeoutMs = 5000) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -255,7 +271,9 @@ async function launchBotIfNeeded(mode = "lease") {
 
   botLaunchInFlight = true;
   try {
-    const networkOk = await verifyTelegramConnectivity();
+    const bypassConnectivityPreflight = shouldBypassConnectivityPreflight(mode);
+    const networkOk = bypassConnectivityPreflight ? true : await verifyTelegramConnectivity();
+
     if (!networkOk) {
       setTelegramDegraded("network_unreachable");
       scheduleBotLaunchRetry("network_unreachable");
@@ -1547,6 +1565,26 @@ bot.on("text", async (ctx) => {
     const text = ctx.message.text?.trim() || "";
     if (!text) return;
 
+    // Hermes intent router shadow mode.
+    // This logs intent classification and allows safe-routing below.
+    let hermesIntent = null;
+    try {
+      hermesIntent = await classifyIntentWithHermes(text);
+      console.log("[HERMES INTENT SHADOW]", {
+        text,
+        intent: hermesIntent.intent,
+        symbol: hermesIntent.symbol,
+        symbols: hermesIntent.symbols,
+        confidence: hermesIntent.confidence,
+        source: hermesIntent.source,
+        error: hermesIntent.hermesError || null
+      });
+    } catch (hermesIntentError) {
+      console.warn("[HERMES INTENT SHADOW ERROR]", {
+        message: hermesIntentError?.message || String(hermesIntentError)
+      });
+    }
+
     // ── Single DB fetch ─────────────────────────────────────────────
     let { data: user } = await supabase
       .from("subscribers")
@@ -2101,6 +2139,91 @@ bot.on("text", async (ctx) => {
         return;
       }
       await performAnalysis(chatId, syntaxCheck.cleanTicker, footer, { mode: "full" });
+      return;
+    }
+
+    // ── Hermes safe intent routing ─────────────────────────────────
+    // Only route low-risk intents here. Stock analysis/trade decisions still use old flow.
+    if (hermesIntent?.intent === "CASUAL_CHAT") {
+      await send("Hi 👋 Send me a stock like *TCS*, *RELIANCE*, or *INFY*, or ask me to analyze one.");
+      return;
+    }
+
+    if (hermesIntent?.intent === "PRICE_CHECK") {
+      const symbol = hermesIntent.symbol;
+      if (!symbol) {
+        await send("Please mention a stock ticker, like *TCS*, *RELIANCE*, or *INFY*.");
+        return;
+      }
+
+      const syntaxResult = validateTickerSyntax(symbol);
+      if (!syntaxResult.valid) {
+        await send(`⚠️ *${symbol}* is not a valid NSE ticker format.`);
+        return;
+      }
+
+      const cleanTicker = normalizeTickerAlias(syntaxResult.cleanTicker);
+      const liveData = await getLiveMarketData(cleanTicker);
+      const price = Number(liveData?.currentPrice || liveData?.price || liveData?.regularMarketPrice || 0);
+
+      if (!price || price <= 0) {
+        await send(buildLiveDataFailureNotice(cleanTicker, liveData), { parse_mode: "Markdown" });
+        return;
+      }
+
+      const source = liveData?.priceSource || liveData?.source || "UNKNOWN";
+      const staleNote =
+        liveData?.degradedMode || liveData?.staleData || liveData?.isStale
+          ? "\n⚠️ Data reliability is degraded; using last verified available quote."
+          : "";
+
+      await send(
+        `📈 *${cleanTicker} Price*\n` +
+        `₹${price}\n` +
+        `Source: ${source}${staleNote}`,
+        { parse_mode: "Markdown" }
+      );
+      return;
+    }
+
+    if (hermesIntent?.intent === "ALERT_CREATE") {
+      const symbol = hermesIntent.symbol;
+      const price = Number(hermesIntent.price || 0);
+      const condition = hermesIntent.condition || "above";
+
+      if (!symbol || !price || price <= 0) {
+        await send("Please send alert like: *alert me if AXISBANK crosses 1300*");
+        return;
+      }
+
+      try {
+        const alert = await createPriceAlert({
+          chatId,
+          symbol,
+          exchange: hermesIntent.exchange || "NSE",
+          condition,
+          targetPrice: price
+        });
+
+        await send(
+          `✅ Price alert created\n` +
+          `Stock: *${alert.symbol}*\n` +
+          `Condition: *${alert.condition} ₹${alert.target_price}*\n` +
+          `Status: *${alert.status}*`,
+          { parse_mode: "Markdown" }
+        );
+      } catch (alertError) {
+        console.error("[PRICE ALERT CREATE FAILED]", {
+          chatId,
+          symbol,
+          condition,
+          price,
+          message: alertError?.message
+        });
+
+        await send("❌ Could not create price alert right now. Please try again shortly.");
+      }
+
       return;
     }
 
