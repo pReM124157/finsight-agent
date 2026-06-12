@@ -1952,7 +1952,18 @@ CRITICAL RULES:
       };
     }
 
-    news = await fetchCompanyNews(ticker, stockData?.Name);
+    // Company news is supporting context, not a blocker for the core stock verdict.
+    news = await Promise.race([
+      fetchCompanyNews(ticker, stockData?.Name),
+      new Promise(resolve =>
+        setTimeout(() => resolve({
+          positive: "News check skipped due to timeout.",
+          negative: "No blocking negative news confirmed.",
+          sentiment: "NEUTRAL",
+          degraded: true
+        }), Number(process.env.COMPANY_NEWS_TIMEOUT_MS || 1200))
+      )
+    ]);
     console.log("[NEWS DATA]", news);
 
     const confidenceEvidence = {
@@ -1999,6 +2010,28 @@ CRITICAL RULES:
       }
     };
 
+    const rawDecisionAction = finalDecision.finalDecision || "HOLD";
+    const entryStrategyUpper = String(entryTiming?.strategy || "").toUpperCase();
+    const exitSignalUpper = String(exitSignal?.signal || "").toUpperCase();
+    const capitalActionUpper = String(positionSizing?.capitalAction || "").toUpperCase();
+    const executionAdviceUpper = String(entryTiming?.finalExecutionAdvice || "").toUpperCase();
+
+    const executionBlockedByStrategy =
+      entryStrategyUpper.includes("AVOID") ||
+      executionAdviceUpper.includes("AVOID") ||
+      capitalActionUpper.includes("AVOID FRESH DEPLOYMENT") ||
+      capitalActionUpper.includes("BLOCKED");
+
+    const exitOverrideActive =
+      exitSignalUpper.includes("TRIM POSITION") ||
+      exitSignalUpper.includes("FULL EXIT");
+
+    const executableAction = !isLive
+      ? ((rawDecisionAction === "BUY" || rawDecisionAction === "SELL") ? "PENDING_EXECUTION" : "HOLD")
+      : (executionBlockedByStrategy || exitOverrideActive)
+        ? "HOLD"
+        : rawDecisionAction;
+
     return {
       risk,
       portfolio,
@@ -2028,7 +2061,9 @@ CRITICAL RULES:
       confidenceEvidence,
       institutionalEvidence,
       validation: validationResult,
-      action: isLive ? (finalDecision.finalDecision || "HOLD") : ((finalDecision.finalDecision === "BUY" || finalDecision.finalDecision === "SELL") ? "PENDING_EXECUTION" : "HOLD"),
+      // User-facing executable action after timing, exit, event-risk, and capital-safety overrides.
+        // Raw model decision remains available under decision.finalDecision for audit/debug.
+        action: executableAction,
       nextStep: marketStatus.isWeekend ? "Re-evaluate on Monday after open" : 
                 (marketStatus.isPostMarket ? "Monitor tomorrow's open" : 
                 (marketStatus.isPreMarket ? "Wait for market open" : 

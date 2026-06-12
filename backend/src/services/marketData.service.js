@@ -936,39 +936,80 @@ export async function checkSymbolExists(symbol) {
  * Fetches Nifty 50 and Sensex current quotes.
  */
 export async function getIndianIndices() {
+  const neutralIndices = {
+    nifty: { price: 0, change: 0, changeRaw: 0, degraded: true },
+    sensex: { price: 0, change: 0, changeRaw: 0, degraded: true }
+  };
+
+  const isValidIndicesPayload = (payload) => {
+    return Boolean(
+      payload &&
+      typeof payload === "object" &&
+      payload.nifty &&
+      payload.sensex &&
+      typeof payload.nifty === "object" &&
+      typeof payload.sensex === "object"
+    );
+  };
+
   try {
     const cacheKey = "MARKET_INDICES_IN";
     const cached = await getHybridCache(cacheKey, "LOW");
-    if (cached) return cached;
 
-    const symbols = ["^NSEI", "^BSESN"]; // Nifty 50 and Sensex
-    const results = await getOrPopulateSharedCache(cacheKey, CACHE_GROUP_MARKET, ttlSecondsForQuality("LOW"), async () =>
-      withProviderGuard("yahoo", async () => yahooFinance.quote(symbols))
-    );
-    
-    const nifty = results.find(r => r.symbol === "^NSEI") || {};
-    const sensex = results.find(r => r.symbol === "^BSESN") || {};
+    if (isValidIndicesPayload(cached)) {
+      return {
+        nifty: {
+          price: Number(cached.nifty.price || 0),
+          change: Number(cached.nifty.change || 0),
+          changeRaw: Number(cached.nifty.changeRaw || 0)
+        },
+        sensex: {
+          price: Number(cached.sensex.price || 0),
+          change: Number(cached.sensex.change || 0),
+          changeRaw: Number(cached.sensex.changeRaw || 0)
+        }
+      };
+    }
+
+    if (cached) {
+      console.warn("[MARKET INDICES] ignoring malformed cached payload");
+    }
+
+    const symbols = ["^NSEI", "^BSESN"];
+    const INDEX_CONTEXT_TIMEOUT_MS = Number(process.env.INDEX_CONTEXT_TIMEOUT_MS || 300);
+
+    const results = await Promise.race([
+      withProviderGuard("yahoo", async () => yahooFinance.quote(symbols)),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`index context timeout after ${INDEX_CONTEXT_TIMEOUT_MS}ms`)),
+          INDEX_CONTEXT_TIMEOUT_MS
+        )
+      )
+    ]);
+
+    const safeResults = Array.isArray(results) ? results : [];
+    const nifty = safeResults.find(r => r.symbol === "^NSEI") || {};
+    const sensex = safeResults.find(r => r.symbol === "^BSESN") || {};
 
     const payload = {
       nifty: {
-        price: nifty.regularMarketPrice,
-        change: nifty.regularMarketChangePercent,
-        changeRaw: nifty.regularMarketChange
+        price: Number(nifty.regularMarketPrice || 0),
+        change: Number(nifty.regularMarketChangePercent || 0),
+        changeRaw: Number(nifty.regularMarketChange || 0)
       },
       sensex: {
-        price: sensex.regularMarketPrice,
-        change: sensex.regularMarketChangePercent,
-        changeRaw: sensex.regularMarketChange
+        price: Number(sensex.regularMarketPrice || 0),
+        change: Number(sensex.regularMarketChangePercent || 0),
+        changeRaw: Number(sensex.regularMarketChange || 0)
       }
     };
+
     await setHybridCache(cacheKey, CACHE_GROUP_MARKET, payload, "LOW");
     return payload;
   } catch (error) {
-    console.warn("Failed to fetch indices:", error.message);
-    return {
-      nifty: { price: 0, change: 0 },
-      sensex: { price: 0, change: 0 }
-    };
+    console.warn("[MARKET INDICES] degraded neutral fallback:", error.message);
+    return neutralIndices;
   }
 }
 
@@ -1530,7 +1571,14 @@ export async function getLiveMarketData(symbol) {
             if (staleLiveData) {
               console.warn(`[DATA] stale live cache symbol=${upperSymbol} age=${age}s`);
             }
-            return { ...cached, dataAge: age, dataConfidence: "CACHED", staleData: staleLiveData };
+            return {
+                ...cached,
+                dataAge: age,
+                dataConfidence: "CACHED",
+                staleData: staleLiveData,
+                // Provider latency is request-local. Do not reuse old latency block from cache.
+                latencyBlocked: false
+              };
           }
           console.log(
             `[CACHE] bypass symbol=${upperSymbol} age=${formatCacheAge(age)} reason=${marketStatus.isPostMarket ? "post-market" : "pre-market"}`
@@ -1664,7 +1712,7 @@ export async function getLiveMarketData(symbol) {
 
           const currentPrice = resolvedPrice.value;
           const previousClose = toPositiveNumber(result?.regularMarketPreviousClose) || toPositiveNumber(result?.previousClose);
-          const latencyBlocked = fetchDuration > 2500;
+          const latencyBlocked = fetchDuration > 4000;
 
           console.log("PRICE FIELDS:", {
             symbol: fetchSymbol || upperSymbol,
@@ -1789,7 +1837,9 @@ export async function getLiveMarketData(symbol) {
               priceField,
               dataConfidence,
               completeness,
-              latencyBlocked,
+              // Provider latency is diagnostic only. A verified live price should not become non-executable only because the provider was slow.
+              latencyBlocked: false,
+              providerLatencyBlocked: latencyBlocked,
               fetchDuration,
               dataAge: 0,
               timestamp: Date.now(),
@@ -1818,7 +1868,12 @@ export async function getLiveMarketData(symbol) {
       );
 
       await saveLastVerifiedQuote(upperSymbol, finalData);
-      await setHybridCache(cacheKey, CACHE_GROUP_LIVE, finalData, finalData.priceSource === "YAHOO" ? "HIGH" : "LOW");
+      const cacheSafeFinalData = {
+        ...finalData,
+        // Provider latency is request-local. Do not poison future cache hits.
+        latencyBlocked: false
+      };
+      await setHybridCache(cacheKey, CACHE_GROUP_LIVE, cacheSafeFinalData, finalData.priceSource === "YAHOO" ? "HIGH" : "LOW");
       return finalData;
 
     } catch (error) {
