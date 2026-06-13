@@ -46,6 +46,8 @@ import { buildAnalysisContext } from "../core/analysisContext.js";
 import { parseAddCommand, parseRemoveCommand } from "./portfolioCommandParser.service.js";
 import { normalizeTickerAlias } from "../core/tickerAliases.js";
 import { optimizePortfolioCandidate } from "./portfolioOptimizer.service.js";
+import { buildStockReportPayload } from "./report.service.js";
+import { generateStockReportPDF } from "./pdfReport.service.js";
 import {
   claimEphemeralKey,
   consumeState,
@@ -1369,6 +1371,64 @@ async function performAnalysis(chatId, symbol, footer = "", options = {}) {
   await sendTelegramLongMessage(chatId, finalMessage);
 }
 
+async function handleReportCommand(chatId, symbol) {
+  const normalizedSymbol = String(symbol || "").trim().toUpperCase();
+  if (!normalizedSymbol) {
+    await bot.telegram.sendMessage(
+      chatId,
+      "Please provide a stock symbol.\nUsage: /report TCS"
+    );
+    return;
+  }
+
+  await bot.telegram.sendMessage(
+    chatId,
+    `Generating institutional report for ${normalizedSymbol}.\nThis usually takes around 10 to 20 seconds.`
+  );
+
+  try {
+    const reportPayload = await buildStockReportPayload(normalizedSymbol);
+    if (reportPayload.analysisData?.status === "VERIFIED_ANALYSIS_UNAVAILABLE") {
+      await bot.telegram.sendMessage(
+        chatId,
+        reportPayload.analysisData.message || `Could not generate verified analysis for ${normalizedSymbol} right now.`
+      );
+      return;
+    }
+
+    const pdfBuffer = await generateStockReportPDF(reportPayload);
+    const action =
+      reportPayload.analysisData?.decision?.finalDecision ||
+      reportPayload.analysisData?.decision?.finalAction ||
+      "N/A";
+    const confidence =
+      reportPayload.analysisData?.decision?.finalConfidenceScore ??
+      reportPayload.analysisData?.decision?.confidenceScore ??
+      "N/A";
+    const risk = reportPayload.analysisData?.risk?.riskLevel || "N/A";
+    const filename = `Finsight_${normalizedSymbol}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+    await bot.telegram.sendDocument(
+      chatId,
+      { source: pdfBuffer, filename },
+      {
+        caption:
+          `${normalizedSymbol} - Finsight AI Report\n\n` +
+          `Action: ${action}\n` +
+          `Confidence: ${confidence}/10\n` +
+          `Risk: ${risk}\n\n` +
+          `Informational only. Not investment advice.`
+      }
+    );
+  } catch (error) {
+    logError("telegram.report.error", error, { chatId, symbol: normalizedSymbol });
+    await bot.telegram.sendMessage(
+      chatId,
+      `Report generation failed for ${normalizedSymbol}. Please try again shortly.`
+    );
+  }
+}
+
 async function sendSubscriptionLink(chatId) {
   const { url, alreadyActive } = await createPaymentLink(chatId.toString());
   if (alreadyActive) {
@@ -1984,6 +2044,7 @@ bot.on("text", async (ctx) => {
       await bot.telegram.sendMessage(chatId,
         `🏦 *Finsight AI — Command Menu*\n━━━━━━━━━━━━━━━━━━\n\n` +
         `• /analyze <TICKER> — Full deep-dive report (default)\n• /dossier <TICKER> — Full deep-dive report\n• /quick <TICKER> — Quick trend check\n` +
+        `• /report <TICKER> — Downloadable PDF report\n` +
         `• /compare <T1> <T2> — Side-by-side comparison\n• /top — 🚀 Top market opportunities\n` +
         `• /sector — 📊 Sector rotation report\n• /portfolio — 🏥 Portfolio health\n` +
         `• /systems — 🛰 Infra + telemetry status\n` +
@@ -1991,6 +2052,13 @@ bot.on("text", async (ctx) => {
         `━━━━━━━━━━━━━━━━━━\n⚠️ Educational purposes only. Not SEBI registered advice.`,
         { parse_mode: "Markdown" }
       );
+      return;
+    }
+
+    // ── /report ────────────────────────────────────────────────────
+    if (lowerText.startsWith("/report")) {
+      const ticker = text.replace(/^\/report\s*/i, "").trim().toUpperCase();
+      await handleReportCommand(chatId, ticker);
       return;
     }
 

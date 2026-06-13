@@ -25,6 +25,7 @@ export default defineConfig({
       "tests/integration/scheduler-lease.integration.test.js",
       "tests/integration/webhook-signature.integration.test.js",
       "tests/integration/provider-resilience.integration.test.js",
+      "tests/integration/pdf-report.integration.test.js",
       "tests/integration/scanner-formatter.integration.test.js",
       "tests/integration/pipeline-regression.integration.test.js",
       "tests/integration/elitescanner.guardrail.test.js",
