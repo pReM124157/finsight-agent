@@ -20,6 +20,8 @@
     "kalshi:flow": "node scripts/testPaperDecisionFlow.js",
     "kalshi:settlement": "node scripts/testSettlementEngine.js",
     "kalshi:api": "node scripts/testKalshiApiRoutes.js",
+    "kalshi:scan": "node scripts/testMarketScanner.js",
+    "kalshi:scheduler": "node scripts/testKalshiScannerScheduler.js",
     "test:integration": "vitest run tests/integration --reporter=verbose",
     "validate:phase1": "node scripts/validation/generatePhase1Inventory.mjs",
     "validate:baseline": "npm run test && npm run test:integration && npm run validate:phase1",

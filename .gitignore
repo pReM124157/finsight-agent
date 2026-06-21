@@ -2,3 +2,4 @@ node_modules
 .env
 .DS_Store
 backend/data/kalshi-paper-trades.json
+backend/data/kalshi-market-snapshots.json

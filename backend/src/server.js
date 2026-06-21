@@ -4,6 +4,7 @@ import { staggerSchedulerExecution } from "./services/schedulerStagger.service.j
 import { startInstitutionalWorkers } from "./workers/index.js";
 import { warmupYahooSession } from "./services/marketData.service.js";
 import { startBot } from "./services/telegram.service.js";
+import { startKalshiScannerScheduler } from "./kalshi/scheduler/kalshiScannerScheduler.js";
 import app from "./app.js";
 
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,8 @@ async function startSchedulerSafely(name, starter) {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server listening on 0.0.0.0:${PORT}`);
   console.log("✅ Health check path / is now responsive.");
+
+  startKalshiScannerScheduler();
 
   startBot();
 

@@ -27,6 +27,14 @@ import {
   summarizePaperRiskState,
   defaultKalshiRiskLimits,
 } from "../risk/kalshiRiskEngine.js";
+import {
+  getKalshiScannerSchedulerStatus,
+  runKalshiScannerOnce,
+} from "../scheduler/kalshiScannerScheduler.js";
+import {
+  getMarketSnapshots,
+  getSnapshotStats,
+} from "../data/snapshotStore.js";
 
 const router = express.Router();
 
@@ -226,6 +234,60 @@ router.post("/paper/resolve-outcome", async (req, res) => {
     res.status(500).json({
       ok: false,
       reason: "OUTCOME_RESOLUTION_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/scanner/status", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      scheduler: getKalshiScannerSchedulerStatus(),
+      snapshotStats: getSnapshotStats(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "SCANNER_STATUS_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/scanner/run", async (req, res) => {
+  try {
+    const result = await runKalshiScannerOnce({
+      limit: req.body?.limit || 50,
+      maxCandidates: req.body?.maxCandidates || 5,
+      status: req.body?.status || "open",
+      dryRun: Boolean(req.body?.dryRun),
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "SCANNER_RUN_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/snapshots", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      stats: getSnapshotStats(),
+      snapshots: getMarketSnapshots({
+        limit: req.query.limit || 50,
+        marketTicker: req.query.marketTicker || null,
+      }),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "SNAPSHOTS_FAILED",
       error: error.message,
     });
   }
