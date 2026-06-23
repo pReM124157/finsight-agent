@@ -3,7 +3,9 @@ import {
   getKalshiMarkets,
   getKalshiMarketOrderbook,
 } from "../data/kalshiClient.js";
+import { estimateBtcReachability } from "./reachabilityEngine.js";
 import {
+  calculateMispricing,
   extractMarketProbabilityFromOrderbook,
 } from "./mispricingEngine.js";
 import { runPaperDecisionFlow } from "../execution/paperDecisionFlow.js";
@@ -11,6 +13,10 @@ import {
   saveMarketSnapshot,
   getSnapshotStats,
 } from "../data/snapshotStore.js";
+import {
+  addLabeledSnapshot,
+  buildFeatureRowFromSnapshot,
+} from "../dataset/labeledSnapshotDataset.js";
 
 function safeNumber(value, fallback = null) {
   const n = Number(value);
@@ -32,12 +38,58 @@ function textOfMarket(market) {
 
 export function isBtcMarket(market) {
   const text = textOfMarket(market).toLowerCase();
+  const matchedTerms = [
+    "bitcoin",
+    "btc",
+    "xbt",
+    "crypto",
+    "cryptocurrency",
+    "bitcoin price",
+    "btc price",
+  ].filter((term) => text.includes(term));
 
-  return (
-    text.includes("bitcoin") ||
-    text.includes("btc") ||
-    text.includes("xbt")
-  );
+  const hasStrongCryptoKeyword =
+    matchedTerms.includes("bitcoin") ||
+    matchedTerms.includes("btc") ||
+    matchedTerms.includes("xbt") ||
+    matchedTerms.includes("bitcoin price") ||
+    matchedTerms.includes("btc price");
+
+  const hasCryptoContext =
+    (matchedTerms.includes("crypto") || matchedTerms.includes("cryptocurrency")) &&
+    (text.includes("price") || text.includes("bitcoin") || text.includes("btc") || text.includes("xbt"));
+
+  return hasStrongCryptoKeyword || hasCryptoContext;
+}
+
+export function explainMarketClassification(market) {
+  const text = textOfMarket(market);
+  const lower = text.toLowerCase();
+
+  const matchedTerms = [
+    "bitcoin",
+    "btc",
+    "xbt",
+    "crypto",
+    "cryptocurrency",
+    "bitcoin price",
+    "btc price",
+  ].filter((term) => lower.includes(term));
+
+  const targetPrice = parseBtcTargetPrice(market);
+  const minutesRemaining = inferMinutesRemaining(market);
+
+  return {
+    ticker: market?.ticker || null,
+    title: market?.title || null,
+    textPreview: text.slice(0, 300),
+    isBtcMarket: isBtcMarket(market),
+    matchedTerms,
+    targetPrice,
+    minutesRemaining,
+    status: market?.status || null,
+    close_time: market?.close_time || null,
+  };
 }
 
 export function parseBtcTargetPrice(market) {
@@ -69,12 +121,32 @@ export function inferMinutesRemaining(market) {
   return Math.min(minutes, 60);
 }
 
+function buildObservationDecision({ reachability, mispricing }) {
+  return {
+    ok: true,
+    stage: "OBSERVATION_ONLY",
+    action: "OBSERVATION_ONLY",
+    reason: "DRY_RUN_SCAN_ONLY",
+    bestSide: mispricing?.bestSide || null,
+    bestAdjustedEdge: mispricing?.bestAdjustedEdge || null,
+    confidenceScore: mispricing?.confidenceScore || null,
+    modelProbability: reachability?.modelProbability || null,
+    marketProbability: mispricing?.marketProbability || null,
+  };
+}
+
 export async function scanKalshiBtcMarkets({
   limit = 25,
   maxCandidates = 5,
   status = "open",
   dryRun = false,
   riskLimits = null,
+  annualizedVolatility = 0.55,
+  momentumBps = 0,
+  feeBps = 20,
+  minEdgePct = 5,
+  strongEdgePct = 10,
+  maxAllowedSpreadPct = 8,
 } = {}) {
   const startedAt = new Date().toISOString();
 
@@ -95,6 +167,9 @@ export async function scanKalshiBtcMarkets({
   });
 
   const allMarkets = marketsResponse.markets || [];
+  const marketClassificationSample = allMarkets
+    .slice(0, 10)
+    .map(explainMarketClassification);
   const btcMarkets = allMarkets.filter(isBtcMarket).slice(0, maxCandidates);
 
   const snapshots = [];
@@ -151,6 +226,33 @@ export async function scanKalshiBtcMarkets({
         continue;
       }
 
+      const reachability = estimateBtcReachability({
+        currentPrice: btc.price,
+        targetPrice,
+        minutesRemaining,
+        annualizedVolatility,
+        momentumBps,
+        marketProbability: implied.marketProbability,
+      });
+      const mispricing = reachability.ok
+        ? calculateMispricing({
+            marketProbability: implied.marketProbability,
+            modelProbability: reachability.modelProbability,
+            yesBidPrice: implied.yesBid,
+            yesAskPrice: implied.yesAsk,
+            noBidPrice: implied.noBid,
+            noAskPrice: implied.noAsk,
+            feeBps,
+            minEdgePct,
+            strongEdgePct,
+            maxAllowedSpreadPct,
+          })
+        : {
+            ok: false,
+            reason: reachability.reason,
+            decision: "NO_TRADE",
+          };
+
       let decision = null;
 
       if (!dryRun) {
@@ -163,15 +265,17 @@ export async function scanKalshiBtcMarkets({
           yesAskPrice: implied.yesAsk,
           noBidPrice: implied.noBid,
           noAskPrice: implied.noAsk,
-          annualizedVolatility: 0.55,
-          momentumBps: 0,
-          feeBps: 20,
-          minEdgePct: 5,
-          strongEdgePct: 10,
-          maxAllowedSpreadPct: 8,
+          annualizedVolatility,
+          momentumBps,
+          feeBps,
+          minEdgePct,
+          strongEdgePct,
+          maxAllowedSpreadPct,
           riskLimits: riskLimits || undefined,
           notes: "Created by Kalshi BTC market scanner",
         });
+      } else {
+        decision = buildObservationDecision({ reachability, mispricing });
       }
 
       const snapshot = saveMarketSnapshot({
@@ -180,6 +284,8 @@ export async function scanKalshiBtcMarkets({
         btcPrice: btc.price,
         targetPrice,
         minutesRemaining,
+        annualizedVolatility,
+        momentumBps,
         orderbook: {
           yesLevels: orderbook.yes?.length || 0,
           noLevels: orderbook.no?.length || 0,
@@ -187,11 +293,10 @@ export async function scanKalshiBtcMarkets({
           noTop: orderbook.no?.[0] || null,
         },
         implied,
+        reachability,
+        mispricing,
         decision: dryRun
-          ? {
-              action: "DRY_RUN",
-              reason: "SCAN_ONLY",
-            }
+          ? decision
           : {
               ok: decision?.ok,
               stage: decision?.stage,
@@ -199,6 +304,9 @@ export async function scanKalshiBtcMarkets({
               reason: decision?.reason,
               bestSide: decision?.mispricing?.bestSide || null,
               bestAdjustedEdge: decision?.mispricing?.bestAdjustedEdge || null,
+              confidenceScore: decision?.mispricing?.confidenceScore || null,
+              modelProbability: decision?.reachability?.modelProbability || null,
+              marketProbability: decision?.mispricing?.marketProbability || null,
               paperTradeId: decision?.paperTrade?.trade?.id || null,
             },
         rawMarket: {
@@ -209,8 +317,14 @@ export async function scanKalshiBtcMarkets({
         },
       });
 
+      if (dryRun) {
+        addLabeledSnapshot(buildFeatureRowFromSnapshot(snapshot));
+      }
+
       snapshots.push(snapshot);
-      decisions.push(decision);
+      if (!dryRun) {
+        decisions.push(decision);
+      }
     } catch (error) {
       errors.push({
         marketTicker,
@@ -223,6 +337,7 @@ export async function scanKalshiBtcMarkets({
 
   return {
     ok: true,
+    mode: dryRun ? "OBSERVATION_ONLY" : "PAPER",
     scannedAt: startedAt,
     btc: {
       price: btc.price,
@@ -234,6 +349,7 @@ export async function scanKalshiBtcMarkets({
     snapshotsCreated: snapshots.length,
     paperDecisions: decisions.length,
     errors,
+    marketClassificationSample,
     snapshotStats: getSnapshotStats(),
     snapshots,
   };

@@ -3,3 +3,5 @@ node_modules
 .DS_Store
 backend/data/kalshi-paper-trades.json
 backend/data/kalshi-market-snapshots.json
+backend/data/kalshi-real-trades.json
+backend/data/kalshi-labeled-snapshots.json

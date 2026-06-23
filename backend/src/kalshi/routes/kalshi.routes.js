@@ -44,6 +44,17 @@ import {
   getSnapshotStats,
 } from "../data/snapshotStore.js";
 import { buildKalshiPerformanceReport } from "../backtest/performanceReportEngine.js";
+import {
+  addRealTrade,
+  getRealTrades,
+  getRealTradeStats,
+} from "../dataset/realTradeDataset.js";
+import {
+  addLabeledSnapshot,
+  getLabeledSnapshots,
+  getLabeledSnapshotStats,
+  labelSnapshot,
+} from "../dataset/labeledSnapshotDataset.js";
 
 const router = express.Router();
 
@@ -380,6 +391,112 @@ router.get("/snapshots", async (req, res) => {
     res.status(500).json({
       ok: false,
       reason: "SNAPSHOTS_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/dataset/real-trades", async (req, res) => {
+  try {
+    const result = addRealTrade(req.body || {});
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "REAL_TRADE_INSERT_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/dataset/real-trades", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      trades: getRealTrades({
+        limit: req.query.limit || 100,
+        side: req.query.side || null,
+        outcome: req.query.outcome || null,
+      }),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "REAL_TRADES_FETCH_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/dataset/real-trades/stats", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      stats: getRealTradeStats(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "REAL_TRADES_STATS_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/dataset/labeled-snapshots", async (req, res) => {
+  try {
+    const result = addLabeledSnapshot(req.body || {});
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "LABELED_SNAPSHOT_INSERT_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/dataset/labeled-snapshots", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      snapshots: getLabeledSnapshots({
+        limit: req.query.limit || 100,
+        label: req.query.label || null,
+      }),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "LABELED_SNAPSHOTS_FETCH_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/dataset/labeled-snapshots/label", async (req, res) => {
+  try {
+    const result = labelSnapshot(req.body || {});
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "LABELED_SNAPSHOT_LABEL_FAILED",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/dataset/labeled-snapshots/stats", async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      stats: getLabeledSnapshotStats(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      reason: "LABELED_SNAPSHOT_STATS_FAILED",
       error: error.message,
     });
   }

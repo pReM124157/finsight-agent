@@ -15,12 +15,13 @@ async function main() {
     limit: 50,
     maxCandidates: 5,
     status: "open",
-    dryRun: false,
+    dryRun: true,
   });
 
   console.log("\n[SCAN RESULT]");
   console.log(JSON.stringify({
     ok: result.ok,
+    mode: result.mode,
     scannedAt: result.scannedAt,
     btc: result.btc,
     totalMarketsFetched: result.totalMarketsFetched,
@@ -28,6 +29,7 @@ async function main() {
     snapshotsCreated: result.snapshotsCreated,
     paperDecisions: result.paperDecisions,
     errors: result.errors,
+    marketClassificationSample: result.marketClassificationSample,
   }, null, 2));
 
   console.log("\n[SNAPSHOT STATS]");
