@@ -79,17 +79,10 @@ export async function runPaperSettlementOnce() {
 
     const results = [];
     let settledTrades = 0;
-    const processedTickers = new Set();
 
     for (const trade of expiredTrades) {
-      if (processedTickers.has(trade.marketTicker)) {
-        continue;
-      }
-
-      processedTickers.add(trade.marketTicker);
-
       const settlement = settleOpenPaperTradesByBtcPrice({
-        marketTicker: trade.marketTicker,
+        tradeId: trade.id,
         settlementBtcPrice: btc.price,
       });
 

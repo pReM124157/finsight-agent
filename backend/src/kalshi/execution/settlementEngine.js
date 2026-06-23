@@ -2,6 +2,7 @@ import {
   getPaperTrades,
   settlePaperTrade,
   getPaperTradingStats,
+  hasTradeBeenSettled,
 } from "./paperTradingEngine.js";
 
 function safeNumber(value, fallback = null) {
@@ -57,17 +58,52 @@ export function resolveBtcTargetOutcome({
 export function settleOpenPaperTradesByBtcPrice({
   settlementBtcPrice,
   marketTicker = null,
+  tradeId = null,
 } = {}) {
   const openTrades = getPaperTrades({ status: "OPEN", limit: 1000 });
 
-  const candidates = marketTicker
-    ? openTrades.filter((trade) => trade.marketTicker === marketTicker)
-    : openTrades;
+  const candidates = tradeId
+    ? openTrades.filter((trade) => trade.id === tradeId)
+    : marketTicker
+      ? openTrades.filter((trade) => trade.marketTicker === marketTicker)
+      : openTrades;
 
   const settled = [];
   const skipped = [];
+  const processedTradeIds = new Set();
 
   for (const trade of candidates) {
+    if (processedTradeIds.has(trade.id)) {
+      skipped.push({
+        tradeId: trade.id,
+        marketTicker: trade.marketTicker,
+        reason: "TRADE_ALREADY_PROCESSED_IN_RUN",
+      });
+      continue;
+    }
+
+    processedTradeIds.add(trade.id);
+
+    const currentState = hasTradeBeenSettled(trade.id);
+
+    if (!currentState.exists) {
+      skipped.push({
+        tradeId: trade.id,
+        marketTicker: trade.marketTicker,
+        reason: "TRADE_NOT_FOUND",
+      });
+      continue;
+    }
+
+    if (currentState.settled) {
+      skipped.push({
+        tradeId: trade.id,
+        marketTicker: trade.marketTicker,
+        reason: "TRADE_ALREADY_CLOSED",
+      });
+      continue;
+    }
+
     const direction =
       safeNumber(trade.targetPrice) >= safeNumber(trade.btcPrice)
         ? "UP"
@@ -96,6 +132,15 @@ export function settleOpenPaperTradesByBtcPrice({
       settlementPrice: won ? 100 : 0,
     });
 
+    if (!result.ok) {
+      skipped.push({
+        tradeId: trade.id,
+        marketTicker: trade.marketTicker,
+        reason: result.reason || "SETTLEMENT_FAILED",
+      });
+      continue;
+    }
+
     settled.push({
       tradeId: trade.id,
       marketTicker: trade.marketTicker,
@@ -105,15 +150,16 @@ export function settleOpenPaperTradesByBtcPrice({
       entryBtcPrice: trade.btcPrice,
       settlementBtcPrice,
       actualOutcome: outcome.actualOutcome,
-      result: result.ok ? result.trade.status : "SETTLEMENT_FAILED",
+      result: result.trade.status,
       pnlUsd: result.trade?.pnlUsd ?? null,
-      ok: result.ok,
-      reason: result.reason || null,
+      ok: true,
+      reason: null,
     });
   }
 
   return {
     ok: true,
+    scope: tradeId ? "TRADE_ID" : marketTicker ? "MARKET_TICKER" : "ALL_OPEN_TRADES",
     checked: candidates.length,
     settled: settled.length,
     skipped: skipped.length,

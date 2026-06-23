@@ -3,9 +3,23 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function resolveKillSwitchEnabled(value = process.env.KALSHI_KILL_SWITCH_ENABLED) {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "false" || normalized === "0" || normalized === "off") {
+      return false;
+    }
+    if (normalized === "true" || normalized === "1" || normalized === "on") {
+      return true;
+    }
+  }
+
+  return true;
+}
+
 export const defaultKalshiRiskLimits = {
   paperTradingOnly: true,
-  killSwitchEnabled: false,
+  killSwitchEnabled: resolveKillSwitchEnabled(),
 
   maxTradeSizeUsd: 250,
   maxOpenExposureUsd: 1000,
@@ -17,6 +31,8 @@ export const defaultKalshiRiskLimits = {
 
   allowLiveExecution: false,
 };
+
+export { resolveKillSwitchEnabled };
 
 export function evaluateKalshiTradeRisk({
   tradeCandidate,

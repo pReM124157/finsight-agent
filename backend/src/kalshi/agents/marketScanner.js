@@ -135,6 +135,16 @@ function buildObservationDecision({ reachability, mispricing }) {
   };
 }
 
+function buildClassificationDebug({ allMarkets, btcMarkets, maxCandidates }) {
+  return {
+    scannedMarketCount: allMarkets.length,
+    btcMatchCount: btcMarkets.length,
+    maxCandidates,
+    sample: allMarkets.slice(0, 10).map(explainMarketClassification),
+    btcMatchSample: btcMarkets.slice(0, 5).map(explainMarketClassification),
+  };
+}
+
 export async function scanKalshiBtcMarkets({
   limit = 25,
   maxCandidates = 5,
@@ -167,10 +177,12 @@ export async function scanKalshiBtcMarkets({
   });
 
   const allMarkets = marketsResponse.markets || [];
-  const marketClassificationSample = allMarkets
-    .slice(0, 10)
-    .map(explainMarketClassification);
   const btcMarkets = allMarkets.filter(isBtcMarket).slice(0, maxCandidates);
+  const classificationDebug = buildClassificationDebug({
+    allMarkets,
+    btcMarkets,
+    maxCandidates,
+  });
 
   const snapshots = [];
   const decisions = [];
@@ -349,7 +361,8 @@ export async function scanKalshiBtcMarkets({
     snapshotsCreated: snapshots.length,
     paperDecisions: decisions.length,
     errors,
-    marketClassificationSample,
+    marketClassificationSample: classificationDebug.sample,
+    classificationDebug,
     snapshotStats: getSnapshotStats(),
     snapshots,
   };

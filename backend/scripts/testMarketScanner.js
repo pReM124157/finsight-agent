@@ -30,6 +30,7 @@ async function main() {
     paperDecisions: result.paperDecisions,
     errors: result.errors,
     marketClassificationSample: result.marketClassificationSample,
+    classificationDebug: result.classificationDebug,
   }, null, 2));
 
   console.log("\n[SNAPSHOT STATS]");
