@@ -4,12 +4,21 @@ import { calculateMispricing } from "../agents/mispricingEngine.js";
 import {
   createPaperTrade,
   getPaperTrades,
+  LIVE_STRATEGY_NAME,
+  PAPER_TRADE_SOURCES,
 } from "./paperTradingEngine.js";
 import {
   evaluateKalshiTradeRisk,
   summarizePaperRiskState,
   defaultKalshiRiskLimits,
 } from "../risk/kalshiRiskEngine.js";
+import { evaluateTargetDistanceGuard } from "../risk/targetDistanceGuard.js";
+import { evaluateDisagreementGuard } from "../risk/disagreementGuard.js";
+import {
+  evaluateStrategyZoneGuard,
+  getStrategyZoneConfig,
+} from "../risk/strategyZoneGuard.js";
+import { evaluateNoSideShadow } from "../shadow/noSideShadowAudit.js";
 
 function safeNumber(value, fallback = null) {
   const n = Number(value);
@@ -31,6 +40,7 @@ export async function runPaperDecisionFlow({
   yesAskPrice,
   noBidPrice,
   noAskPrice,
+  requestedSizeUsd = null,
   annualizedVolatility = 0.55,
   momentumBps = 0,
   feeBps = 20,
@@ -77,6 +87,7 @@ export async function runPaperDecisionFlow({
     annualizedVolatility,
     momentumBps,
     marketProbability,
+    marketTicker,
   });
 
   if (!reachability.ok) {
@@ -86,6 +97,27 @@ export async function runPaperDecisionFlow({
       reason: reachability.reason,
       btc,
       reachability,
+    };
+  }
+
+  const distanceGuard = evaluateTargetDistanceGuard({
+    currentPrice,
+    targetPrice: target,
+    minutesRemaining,
+  });
+
+  if (distanceGuard.status === "REJECTED") {
+    return {
+      ok: true,
+      stage: "TARGET_DISTANCE",
+      action: "NO_PAPER_TRADE",
+      reason: distanceGuard.reason,
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing: null,
+      risk: null,
+      paperTrade: null,
     };
   }
 
@@ -113,6 +145,79 @@ export async function runPaperDecisionFlow({
     };
   }
 
+  const shadowNoTrade = evaluateNoSideShadow({
+    marketTicker,
+    snapshotId: null,
+    targetPrice: target,
+    btcPrice: currentPrice,
+    minutesRemaining,
+    momentumBps,
+    mispricing,
+    reachability,
+    requestedSizeUsd,
+  });
+
+  if (distanceGuard.status === "WATCH_ONLY") {
+    return {
+      ok: true,
+      stage: "TARGET_DISTANCE",
+      action: "NO_PAPER_TRADE",
+      reason: distanceGuard.reason,
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      risk: null,
+      paperTrade: null,
+    };
+  }
+
+  const side = mispricing.bestSide;
+
+  if (side === "NO") {
+    return {
+      ok: true,
+      stage: "NO_SIDE_SHADOW_MODE",
+      action: "NO_PAPER_TRADE",
+      reason: shadowNoTrade.candidate
+        ? "NO_SIDE_SHADOW_CANDIDATE_RECORDED"
+        : "NO_SIDE_SHADOW_ONLY",
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      risk: null,
+      paperTrade: null,
+    };
+  }
+
+  const entryProbability = getEntryProbabilityForSide({ side, mispricing });
+  const strategyZoneGuard = evaluateStrategyZoneGuard({
+    side,
+    adjustedEdge: mispricing.bestAdjustedEdge,
+    minutesRemaining,
+    entryProbability,
+  });
+
+  if (!strategyZoneGuard.ok) {
+    return {
+      ok: true,
+      stage: "STRATEGY_ZONE_GUARD",
+      action: "NO_PAPER_TRADE",
+      reason: strategyZoneGuard.reason,
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      strategyZoneGuard,
+      risk: null,
+      paperTrade: null,
+    };
+  }
+
   if (mispricing.decision !== "TRADE") {
     return {
       ok: true,
@@ -121,31 +226,61 @@ export async function runPaperDecisionFlow({
       reason: `MISPRICING_DECISION_${mispricing.decision}`,
       btc,
       reachability,
+      distanceGuard,
       mispricing,
+      shadowNoTrade,
+      strategyZoneGuard,
       risk: null,
       paperTrade: null,
     };
   }
 
-  const side = mispricing.bestSide;
-  const entryProbability = getEntryProbabilityForSide({ side, mispricing });
-
   const openTrades = getPaperTrades({ status: "OPEN", limit: 500 });
   const allRecentTrades = getPaperTrades({ limit: 1000 });
   const currentState = summarizePaperRiskState(allRecentTrades);
 
-  const estimatedSizeUsd =
+  const autoSizeUsd =
     mispricing.bestAdjustedEdge >= 25 ? 500 :
     mispricing.bestAdjustedEdge >= 20 ? 250 :
     mispricing.bestAdjustedEdge >= 15 ? 100 :
     mispricing.bestAdjustedEdge >= 10 ? 50 :
     25;
 
+  const estimatedSizeUsd =
+    Number.isFinite(Number(requestedSizeUsd)) && Number(requestedSizeUsd) > 0
+      ? Number(requestedSizeUsd)
+      : autoSizeUsd;
+
+  const disagreementGuard = evaluateDisagreementGuard({
+    modelProbabilityYes: reachability.modelProbability,
+    marketProbabilityYes: mispricing.marketProbability,
+    requestedSizeUsd: estimatedSizeUsd,
+    disagreementStats: null,
+  });
+
+  if (disagreementGuard.adjustedSizeUsd <= 0) {
+    return {
+      ok: true,
+      stage: "DISAGREEMENT_GUARD",
+      action: "NO_PAPER_TRADE",
+      reason: "DISAGREEMENT_GUARD_BLOCKED",
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      strategyZoneGuard,
+      disagreementGuard,
+      risk: null,
+      paperTrade: null,
+    };
+  }
+
   const risk = evaluateKalshiTradeRisk({
     tradeCandidate: {
       mode: "PAPER",
       side,
-      sizeUsd: estimatedSizeUsd,
+      sizeUsd: disagreementGuard.adjustedSizeUsd,
       adjustedEdge: mispricing.bestAdjustedEdge,
       confidenceScore: mispricing.confidenceScore,
       marketTicker,
@@ -155,6 +290,7 @@ export async function runPaperDecisionFlow({
       openExposureUsd: currentState.openExposureUsd,
       openTrades: openTrades.length,
     },
+    recentTrades: allRecentTrades,
     limits: riskLimits,
   });
 
@@ -166,7 +302,9 @@ export async function runPaperDecisionFlow({
       reason: risk.reason,
       btc,
       reachability,
+      distanceGuard,
       mispricing,
+      shadowNoTrade,
       risk,
       paperTrade: null,
     };
@@ -184,9 +322,22 @@ export async function runPaperDecisionFlow({
     targetPrice: target,
     minutesRemaining,
     confidenceScore: mispricing.confidenceScore,
-    sizeUsd: estimatedSizeUsd,
+    sizeUsd: disagreementGuard.adjustedSizeUsd,
     source: "PAPER_DECISION_FLOW",
     notes,
+    strategy: {
+      name: LIVE_STRATEGY_NAME,
+      guardStatus: strategyZoneGuard.status,
+      guardReason: strategyZoneGuard.reason,
+      guardTags: strategyZoneGuard.tags,
+      config: getStrategyZoneConfig(),
+      acceptedAt: new Date().toISOString(),
+      sessionId: process.env.KALSHI_ACTIVE_SESSION_ID || null,
+    },
+    tradeSource: PAPER_TRADE_SOURCES.LIVE_GUARDED_STRATEGY,
+    strategySessionId: process.env.KALSHI_ACTIVE_SESSION_ID || null,
+    strategyName: LIVE_STRATEGY_NAME,
+    isStrategyTrade: true,
   });
 
   return {
@@ -196,7 +347,11 @@ export async function runPaperDecisionFlow({
     reason: paperTrade.ok ? "TRADE_CREATED" : paperTrade.reason,
     btc,
     reachability,
+    distanceGuard,
     mispricing,
+    shadowNoTrade,
+    strategyZoneGuard,
+    disagreementGuard,
     risk,
     paperTrade,
   };

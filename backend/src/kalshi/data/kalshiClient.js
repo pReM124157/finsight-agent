@@ -1,6 +1,34 @@
 import { kalshiConfig, getKalshiConfigSummary } from "../utils/kalshiConfig.js";
 import { fetchJson } from "../utils/http.js";
 
+function safeNumber(value, fallback = null) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeOrderbookLevels(levels = []) {
+  return (Array.isArray(levels) ? levels : [])
+    .map((level) => {
+      if (!Array.isArray(level) || level.length < 2) return null;
+
+      const rawPrice = safeNumber(level[0]);
+      const rawSize = safeNumber(level[1]);
+
+      if (rawPrice === null || rawSize === null) return null;
+
+      // Kalshi orderbook_fp prices are returned in dollar units from 0.0000 to 1.0000.
+      // The rest of the scanner stack expects 0-100 probability-style price units.
+      const normalizedPrice = rawPrice <= 1 ? rawPrice * 100 : rawPrice;
+
+      return [
+        Number(normalizedPrice.toFixed(3)),
+        Number(rawSize.toFixed(2)),
+      ];
+    })
+    .filter(Boolean)
+    .sort((a, b) => b[0] - a[0]);
+}
+
 function buildUrl(path, params = {}) {
   const url = new URL(`${kalshiConfig.baseUrl}${path}`);
 
@@ -56,13 +84,24 @@ export async function getKalshiMarketOrderbook(ticker) {
     timeoutMs: kalshiConfig.requestTimeoutMs,
   });
 
+  const yes = normalizeOrderbookLevels(
+    data?.orderbook?.yes ||
+    data?.orderbook_fp?.yes_dollars ||
+    []
+  );
+  const no = normalizeOrderbookLevels(
+    data?.orderbook?.no ||
+    data?.orderbook_fp?.no_dollars ||
+    []
+  );
+
   return {
     ok: true,
     source: "KALSHI",
     type: "orderbook",
     ticker,
-    yes: data?.orderbook?.yes || [],
-    no: data?.orderbook?.no || [],
+    yes,
+    no,
     raw: data,
   };
 }

@@ -1,3 +1,8 @@
+import {
+  inferBtcMarketDirectionWithFallback,
+  inferBtcYesContractDirection,
+} from "../utils/btcMarketDirection.js";
+
 function safeNumber(value, fallback = null) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -35,6 +40,9 @@ export function estimateBtcReachability({
   annualizedVolatility = 0.55,
   momentumBps = 0,
   marketProbability = null,
+  marketTicker = null,
+  marketTitle = null,
+  contractDirection = null,
 } = {}) {
   const current = safeNumber(currentPrice);
   const target = safeNumber(targetPrice);
@@ -59,6 +67,18 @@ export function estimateBtcReachability({
   }
 
   const distance = target - current;
+  const contractSide =
+    String(contractDirection || "").trim().toUpperCase() ||
+    inferBtcYesContractDirection({
+      marketTicker,
+      marketTitle,
+    }) ||
+    inferBtcMarketDirectionWithFallback({
+      marketTicker,
+      marketTitle,
+      btcPrice: current,
+      targetPrice: target,
+    });
   const direction = distance >= 0 ? "UP" : "DOWN";
   const absDistance = Math.abs(distance);
   const distanceBps = (absDistance / current) * 10000;
@@ -82,20 +102,20 @@ export function estimateBtcReachability({
   // Positive momentum helps UP targets and hurts DOWN targets.
   const momentumPriceImpact = current * (momentum / 10000);
   const adjustedDistance =
-    direction === "UP"
-      ? distance - momentumPriceImpact
-      : absDistance + momentumPriceImpact;
+    contractSide === "DOWN"
+      ? absDistance + momentumPriceImpact
+      : distance - momentumPriceImpact;
 
   const zScore = adjustedDistance / expectedStdPrice;
 
-  // One-sided probability of reaching/ending beyond target.
-  // This is a simple starting model, not final trading-grade math.
+  // Estimate the probability that the contract settles YES.
   const rawProbability =
-    direction === "UP"
-      ? 1 - normalCdfApprox(zScore)
-      : normalCdfApprox(-zScore);
+    contractSide === "DOWN"
+      ? normalCdfApprox(-zScore)
+      : 1 - normalCdfApprox(zScore);
 
   const modelProbability = clamp(rawProbability, 0.001, 0.999);
+  const resolvedDirection = contractSide || direction;
 
   const marketProb = marketProbability === null ? null : safeNumber(marketProbability);
   const edge =
@@ -114,7 +134,7 @@ export function estimateBtcReachability({
     ok: true,
     currentPrice: current,
     targetPrice: target,
-    direction,
+    direction: resolvedDirection,
     minutesRemaining: minutes,
     annualizedVolatility: vol,
     momentumBps: momentum,
@@ -127,7 +147,7 @@ export function estimateBtcReachability({
     edge,
     reachabilityGrade,
     explanation:
-      `BTC needs to move ${Number(distanceBps.toFixed(2))} bps ${direction} in ${minutes} minutes. ` +
-      `Model probability is ${Number((modelProbability * 100).toFixed(2))}%.`,
+      `BTC needs to settle ${resolvedDirection === "DOWN" ? "at or below" : "at or above"} the target in ${minutes} minutes. ` +
+      `Model YES probability is ${Number((modelProbability * 100).toFixed(2))}%.`,
   };
 }

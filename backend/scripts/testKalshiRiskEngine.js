@@ -36,6 +36,8 @@ async function main() {
     openExposureUsd: 100,
     dailyLossUsd: 0,
     tradesToday: 2,
+  }, {
+    killSwitchEnabled: false,
   });
 
   runScenario("Reject low edge", {
@@ -45,12 +47,16 @@ async function main() {
     openExposureUsd: 100,
     dailyLossUsd: 0,
     tradesToday: 2,
+  }, {
+    killSwitchEnabled: false,
   });
 
   runScenario("Reject max exposure", baseTrade, {
     openExposureUsd: 980,
     dailyLossUsd: 0,
     tradesToday: 2,
+  }, {
+    killSwitchEnabled: false,
   });
 
   runScenario("Reject kill switch", baseTrade, {
@@ -68,6 +74,8 @@ async function main() {
     openExposureUsd: 100,
     dailyLossUsd: 0,
     tradesToday: 2,
+  }, {
+    killSwitchEnabled: false,
   });
 
   const demoTrades = [

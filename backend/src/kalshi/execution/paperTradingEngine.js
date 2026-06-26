@@ -1,9 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
+import { logPaperTradeLesson } from "../learning/lessonLogger.js";
+import {
+  isMongoDualWriteEnabled,
+  savePaperTradeMongo,
+  updatePaperTradeMongo,
+} from "../storage/mongoPersistence.js";
 
 const PAPER_LEDGER_PATH =
   process.env.KALSHI_PAPER_LEDGER_PATH ||
   path.resolve("data/kalshi-paper-trades.json");
+
+export const PAPER_TRADE_SOURCES = {
+  LEGACY_TEST: "LEGACY_TEST",
+  MANUAL_TEST: "MANUAL_TEST",
+  LIVE_GUARDED_STRATEGY: "LIVE_GUARDED_STRATEGY",
+};
+
+export const LIVE_STRATEGY_NAME = "YES_EDGE_10_20_MIN_8_12_PRICE_LT_94";
 
 function ensureLedgerDir() {
   const dir = path.dirname(PAPER_LEDGER_PATH);
@@ -20,7 +34,9 @@ function readLedger() {
   }
 
   try {
-    return JSON.parse(fs.readFileSync(PAPER_LEDGER_PATH, "utf8"));
+    const parsed = JSON.parse(fs.readFileSync(PAPER_LEDGER_PATH, "utf8"));
+    const rows = Array.isArray(parsed) ? parsed : [];
+    return rows.map(normalizeTradeRecord);
   } catch {
     return [];
   }
@@ -31,9 +47,107 @@ function writeLedger(trades) {
   fs.writeFileSync(PAPER_LEDGER_PATH, JSON.stringify(trades, null, 2) + "\n");
 }
 
+function dualWritePaperTrade(trade) {
+  if (!isMongoDualWriteEnabled()) {
+    return;
+  }
+
+  savePaperTradeMongo(trade).catch((error) => {
+    console.warn("[mongo] paper trade dual-write failed:", error.message);
+  });
+}
+
+function dualWritePaperTradeUpdate(trade) {
+  if (!isMongoDualWriteEnabled()) {
+    return;
+  }
+
+  updatePaperTradeMongo(trade?.id || trade?.tradeId, trade).catch((error) => {
+    console.warn("[mongo] paper trade update dual-write failed:", error.message);
+  });
+}
+
 function safeNumber(value, fallback = null) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeString(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function inferTradeSource(trade = {}) {
+  const explicit = normalizeString(trade.tradeSource);
+  if (explicit) return explicit;
+
+  if (trade.isStrategyTrade === true || normalizeString(trade.strategyName) || trade.strategy?.name) {
+    return PAPER_TRADE_SOURCES.LIVE_GUARDED_STRATEGY;
+  }
+
+  const noteText = `${trade.notes || ""} ${trade.marketTicker || ""} ${trade.source || ""}`.toLowerCase();
+  if (noteText.includes("manual")) {
+    return PAPER_TRADE_SOURCES.MANUAL_TEST;
+  }
+
+  return PAPER_TRADE_SOURCES.LEGACY_TEST;
+}
+
+function normalizeTradeRecord(trade = {}) {
+  const strategyName =
+    normalizeString(trade.strategyName) ||
+    normalizeString(trade.strategy?.name) ||
+    (trade.isStrategyTrade ? LIVE_STRATEGY_NAME : null);
+  const isStrategyTrade =
+    trade.isStrategyTrade === true ||
+    inferTradeSource(trade) === PAPER_TRADE_SOURCES.LIVE_GUARDED_STRATEGY;
+
+  return {
+    ...trade,
+    tradeSource: inferTradeSource(trade),
+    strategySessionId:
+      normalizeString(trade.strategySessionId) ||
+      normalizeString(trade.strategy?.sessionId) ||
+      null,
+    strategyName,
+    isStrategyTrade,
+  };
+}
+
+function tradeMatchesFilters(trade, filters = {}) {
+  const normalized = normalizeTradeRecord(trade);
+
+  if (filters.status && normalized.status !== filters.status) {
+    return false;
+  }
+
+  if (filters.tradeSource && normalized.tradeSource !== filters.tradeSource) {
+    return false;
+  }
+
+  if (filters.isStrategyTrade === true && normalized.isStrategyTrade !== true) {
+    return false;
+  }
+
+  if (filters.isStrategyTrade === false && normalized.isStrategyTrade !== false) {
+    return false;
+  }
+
+  if (filters.strategyName && normalized.strategyName !== filters.strategyName) {
+    return false;
+  }
+
+  if (filters.strategySessionId && normalized.strategySessionId !== filters.strategySessionId) {
+    return false;
+  }
+
+  if (filters.date) {
+    const timestamp = normalized.closedAt || normalized.openedAt || "";
+    if (!timestamp.startsWith(String(filters.date))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function generateTradeId() {
@@ -88,6 +202,11 @@ export function createPaperTrade({
   sizeUsd = null,
   source = "MISPRICING_ENGINE",
   notes = "",
+  strategy = null,
+  tradeSource = null,
+  strategySessionId = null,
+  strategyName = null,
+  isStrategyTrade = null,
 } = {}) {
   const entryProb = safeNumber(entryProbability);
 
@@ -153,19 +272,31 @@ export function createPaperTrade({
     pnlUsd: null,
     returnPct: null,
     notes,
+    strategy: strategy && typeof strategy === "object" ? strategy : null,
+    tradeSource: normalizeString(tradeSource),
+    strategySessionId: normalizeString(strategySessionId),
+    strategyName: normalizeString(strategyName),
+    isStrategyTrade: isStrategyTrade === null ? null : Boolean(isStrategyTrade),
   };
 
   const ledger = readLedger();
-  ledger.push(trade);
+  ledger.push(normalizeTradeRecord(trade));
   writeLedger(ledger);
+  dualWritePaperTrade(trade);
 
   return {
     ok: true,
-    trade,
+    trade: normalizeTradeRecord(trade),
   };
 }
 
-export function settlePaperTrade({ tradeId, won, settlementPrice = null } = {}) {
+export function settlePaperTrade({
+  tradeId,
+  won,
+  settlementPrice = null,
+  settlementBtcPrice = null,
+  actualOutcome = null,
+} = {}) {
   const ledger = readLedger();
   const index = ledger.findIndex((trade) => trade.id === tradeId);
 
@@ -183,39 +314,92 @@ export function settlePaperTrade({ tradeId, won, settlementPrice = null } = {}) 
   const pnlUsd = isWin ? trade.maxProfitUsd : -trade.maxLossUsd;
   const returnPct = trade.costUsd > 0 ? (pnlUsd / trade.costUsd) * 100 : null;
 
-  const updated = {
+  const updated = normalizeTradeRecord({
     ...trade,
     status: isWin ? "WON" : "LOST",
     closedAt: new Date().toISOString(),
     settlement: {
       won: isWin,
       settlementPrice,
+      settlementBtcPrice: safeNumber(settlementBtcPrice),
+      actualOutcome: actualOutcome || null,
     },
     pnlUsd: Number(pnlUsd.toFixed(2)),
     returnPct: returnPct === null ? null : Number(returnPct.toFixed(2)),
-  };
+  });
 
   ledger[index] = updated;
   writeLedger(ledger);
+  dualWritePaperTradeUpdate(updated);
+
+  let lesson = {
+    ok: false,
+    reason: "LESSON_LOGGER_NOT_RUN",
+  };
+
+  try {
+    lesson = logPaperTradeLesson(updated);
+  } catch (error) {
+    lesson = {
+      ok: false,
+      reason: "LESSON_LOGGER_FAILED",
+      error: error.message,
+    };
+  }
 
   return {
     ok: true,
     trade: updated,
+    lesson,
   };
 }
 
-export function getPaperTrades({ status = null, limit = 50 } = {}) {
+export function hasTradeBeenSettled(tradeId) {
+  const ledger = readLedger();
+  const trade = ledger.find((t) => t.id === tradeId);
+
+  if (!trade) {
+    return {
+      exists: false,
+      settled: false,
+      trade: null,
+    };
+  }
+
+  return {
+    exists: true,
+    settled: trade.status !== "OPEN",
+    trade,
+  };
+}
+
+export function getPaperTrades({
+  status = null,
+  limit = 50,
+  tradeSource = null,
+  isStrategyTrade = null,
+  strategyName = null,
+  strategySessionId = null,
+  date = null,
+} = {}) {
   const ledger = readLedger();
 
-  const filtered = status
-    ? ledger.filter((trade) => trade.status === status)
-    : ledger;
+  const filtered = ledger.filter((trade) =>
+    tradeMatchesFilters(trade, {
+      status,
+      tradeSource,
+      isStrategyTrade,
+      strategyName,
+      strategySessionId,
+      date,
+    })
+  );
 
   return filtered.slice(-limit).reverse();
 }
 
-export function getPaperTradingStats() {
-  const trades = readLedger();
+export function getPaperTradingStats(filters = {}) {
+  const trades = readLedger().filter((trade) => tradeMatchesFilters(trade, filters));
   const closed = trades.filter((trade) => ["WON", "LOST"].includes(trade.status));
   const open = trades.filter((trade) => trade.status === "OPEN");
 

@@ -7,7 +7,7 @@ export const kalshiConfig = {
   apiKeyId: process.env.KALSHI_API_KEY_ID || "",
   privateKey: process.env.KALSHI_PRIVATE_KEY || "",
 
-  defaultSeriesTicker: process.env.KALSHI_BTC_SERIES_TICKER || "",
+  defaultSeriesTicker: process.env.KALSHI_BTC_SERIES_TICKER || "KXBTC15M",
   requestTimeoutMs: Number(process.env.KALSHI_REQUEST_TIMEOUT_MS || 8000),
 
   paperTradingOnly: process.env.KALSHI_PAPER_TRADING_ONLY !== "false",

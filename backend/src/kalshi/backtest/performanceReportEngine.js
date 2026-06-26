@@ -54,10 +54,53 @@ function computeMaxDrawdown(trades = []) {
   return round(maxDrawdownUsd);
 }
 
-export function buildKalshiPerformanceReport({ limit = 10000 } = {}) {
-  const allTrades = getPaperTrades({ limit, status: null }).reverse();
-  const closedTrades = allTrades.filter((trade) => ["WON", "LOST"].includes(trade.status));
-  const openTrades = allTrades.filter((trade) => trade.status === "OPEN");
+function getTradeDate(trade) {
+  const timestamp = trade?.closedAt || trade?.openedAt || trade?.timestamp || null;
+  if (!timestamp) return null;
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
+}
+
+function buildDaySummary(trades = []) {
+  const closedTrades = trades.filter((trade) => ["WON", "LOST"].includes(trade.status));
+  const winners = closedTrades.filter((trade) => trade.status === "WON");
+  const losers = closedTrades.filter((trade) => trade.status === "LOST");
+  const totalPnlUsd = closedTrades.reduce((sum, trade) => sum + safeNumber(trade.pnlUsd), 0);
+  const totalRiskedUsd = closedTrades.reduce((sum, trade) => sum + safeNumber(trade.costUsd), 0);
+
+  return {
+    trades: closedTrades.length,
+    wins: winners.length,
+    losses: losers.length,
+    winRate: closedTrades.length ? round((winners.length / closedTrades.length) * 100) : 0,
+    totalPnlUsd: round(totalPnlUsd),
+    totalRiskedUsd: round(totalRiskedUsd),
+    roiPct: totalRiskedUsd ? round((totalPnlUsd / totalRiskedUsd) * 100) : 0,
+  };
+}
+
+export function buildKalshiPerformanceReport({
+  limit = 10000,
+  date = null,
+  tradeSource = null,
+  isStrategyTrade = null,
+  strategyName = null,
+  strategySessionId = null,
+} = {}) {
+  const allTrades = getPaperTrades({
+    limit,
+    status: null,
+    tradeSource,
+    isStrategyTrade,
+    strategyName,
+    strategySessionId,
+  }).reverse();
+  const filteredTrades = date
+    ? allTrades.filter((trade) => getTradeDate(trade) === date)
+    : allTrades;
+  const closedTrades = filteredTrades.filter((trade) => ["WON", "LOST"].includes(trade.status));
+  const openTrades = filteredTrades.filter((trade) => trade.status === "OPEN");
   const winners = closedTrades.filter((trade) => trade.status === "WON");
   const losers = closedTrades.filter((trade) => trade.status === "LOST");
 
@@ -106,11 +149,27 @@ export function buildKalshiPerformanceReport({ limit = 10000 } = {}) {
       : 0;
   }
 
+  const tradesByDay = {};
+  for (const trade of closedTrades) {
+    const day = getTradeDate(trade);
+    if (!day) continue;
+    tradesByDay[day] = tradesByDay[day] || [];
+    tradesByDay[day].push(trade);
+  }
+
+  const dailyTable = Object.entries(tradesByDay)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([day, trades]) => ({
+      date: day,
+      ...buildDaySummary(trades),
+    }));
+
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
+    reportDate: date,
     summary: {
-      totalTrades: allTrades.length,
+      totalTrades: filteredTrades.length,
       openTrades: openTrades.length,
       closedTrades: closedTrades.length,
       wins: winners.length,
@@ -125,6 +184,7 @@ export function buildKalshiPerformanceReport({ limit = 10000 } = {}) {
       totalWinnerPnlUsd: round(totalWinnersPnl),
       totalLoserPnlUsd: round(totalLosersPnl),
     },
+    dailyTable,
     probabilityBuckets,
     outsideTrackedBuckets: {
       trades: outsideBucketTrades,

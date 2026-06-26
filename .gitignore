@@ -5,3 +5,17 @@ backend/data/kalshi-paper-trades.json
 backend/data/kalshi-market-snapshots.json
 backend/data/kalshi-real-trades.json
 backend/data/kalshi-labeled-snapshots.json
+backend/data/kalshi-feature-snapshots.jsonl
+backend/data/kalshi-strategy-guard-daily-results.json
+backend/data/kalshi-no-side-shadow-reports.json
+artifacts/
+backend/artifacts/*.log
+backend/artifacts/*.pid
+backend/artifacts/today-kalshi-paper-session-status.json
+backend/backend/
+backend/data/kalshi-scan-rejections.jsonl
+backend/data/kalshi-vig-audit-report.json
+backend/data/kalshi-calibration-report.json
+backend/data/kalshi-no-side-shadow-audit.jsonl
+backend/data/kalshi-trade-lessons.jsonl
+backend/data/lessons.jsonl

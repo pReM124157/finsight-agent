@@ -1,0 +1,3095 @@
+[
+  {
+    "id": "SNAP-1782286873641-4F4A99",
+    "createdAt": "2026-06-24T07:41:13.641Z",
+    "marketTicker": "KXBTC15M-26JUN240345-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62601.47,
+    "targetPrice": 62613.25,
+    "minutesRemaining": 4,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 66,
+      "noLevels": 129,
+      "yesTop": [
+        17,
+        9212.51
+      ],
+      "noTop": [
+        82,
+        3364.15
+      ]
+    },
+    "implied": {
+      "marketProbability": 17.5,
+      "yesBid": 17,
+      "yesAsk": 18,
+      "noBid": 82,
+      "noAsk": 83
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62601.47,
+      "targetPrice": 62613.25,
+      "direction": "UP",
+      "minutesRemaining": 4,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 11.78,
+      "distanceBps": 1.88,
+      "expectedStdPrice": 94.98,
+      "zScore": 0.124,
+      "modelProbability": 45.06,
+      "marketProbability": 17.5,
+      "edge": 27.56,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 4 minutes. Model YES probability is 45.06%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 17.5,
+      "modelProbability": 45.06,
+      "yes": {
+        "rawEdge": 27.56,
+        "adjustedEdge": 26.86,
+        "bid": 17,
+        "ask": 18,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -27.56,
+        "adjustedEdge": -28.26,
+        "bid": 82,
+        "ask": 83,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 27.56,
+      "bestAdjustedEdge": 26.86,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 26.86%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "RISK",
+      "action": "RISK_REJECTED",
+      "reason": "KILL_SWITCH_ENABLED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 28.19,
+      "confidenceScore": 100,
+      "modelProbability": 46.39,
+      "marketProbability": 17.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240345-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T07:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782286931591-7FE0EE",
+    "createdAt": "2026-06-24T07:42:11.591Z",
+    "marketTicker": "KXBTC15M-26JUN240345-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62616.58,
+    "targetPrice": 62613.25,
+    "minutesRemaining": 3,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 69,
+      "noLevels": 123,
+      "yesTop": [
+        23,
+        412
+      ],
+      "noTop": [
+        76,
+        1075
+      ]
+    },
+    "implied": {
+      "marketProbability": 23.5,
+      "yesBid": 23,
+      "yesAsk": 24,
+      "noBid": 76,
+      "noAsk": 77
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62616.58,
+      "targetPrice": 62613.25,
+      "direction": "UP",
+      "minutesRemaining": 3,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -3.33,
+      "distanceBps": 0.53,
+      "expectedStdPrice": 82.28,
+      "zScore": -0.04,
+      "modelProbability": 51.61,
+      "marketProbability": 23.5,
+      "edge": 28.11,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 3 minutes. Model YES probability is 51.61%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 23.5,
+      "modelProbability": 51.61,
+      "yes": {
+        "rawEdge": 28.11,
+        "adjustedEdge": 27.41,
+        "bid": 23,
+        "ask": 24,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -28.11,
+        "adjustedEdge": -28.81,
+        "bid": 76,
+        "ask": 77,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 28.11,
+      "bestAdjustedEdge": 27.41,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 27.41%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 27.39,
+      "confidenceScore": 100,
+      "modelProbability": 51.59,
+      "marketProbability": 23.5,
+      "paperTradeId": "PAPER-1782286931590-A1B6299C"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240345-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T07:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782290942250-65FACA",
+    "createdAt": "2026-06-24T08:49:02.250Z",
+    "marketTicker": "KXBTC15M-26JUN240500-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62716.16,
+    "targetPrice": 62702.4,
+    "minutesRemaining": 11,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 94,
+      "noLevels": 106,
+      "yesTop": [
+        43,
+        392.81
+      ],
+      "noTop": [
+        56,
+        1326.77
+      ]
+    },
+    "implied": {
+      "marketProbability": 43.5,
+      "yesBid": 43,
+      "yesAsk": 44,
+      "noBid": 56,
+      "noAsk": 57
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62716.16,
+      "targetPrice": 62702.4,
+      "direction": "UP",
+      "minutesRemaining": 11,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -13.76,
+      "distanceBps": 2.19,
+      "expectedStdPrice": 157.8,
+      "zScore": -0.087,
+      "modelProbability": 53.47,
+      "marketProbability": 43.5,
+      "edge": 9.97,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 11 minutes. Model YES probability is 53.47%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 43.5,
+      "modelProbability": 53.47,
+      "yes": {
+        "rawEdge": 9.97,
+        "adjustedEdge": 9.27,
+        "bid": 43,
+        "ask": 44,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -9.97,
+        "adjustedEdge": -10.67,
+        "bid": 56,
+        "ask": 57,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 9.97,
+      "bestAdjustedEdge": 9.27,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 78,
+      "explanation": "YES has the best adjusted edge at 9.27%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "DECISION",
+      "action": "NO_PAPER_TRADE",
+      "reason": "MISPRICING_DECISION_WATCH",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 9.27,
+      "confidenceScore": 78,
+      "modelProbability": 53.47,
+      "marketProbability": 43.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240500-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782291001666-E7C5E6",
+    "createdAt": "2026-06-24T08:50:01.667Z",
+    "marketTicker": "KXBTC15M-26JUN240500-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62700,
+    "targetPrice": 62702.4,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 83,
+      "noLevels": 116,
+      "yesTop": [
+        32,
+        192.6
+      ],
+      "noTop": [
+        67,
+        2022.44
+      ]
+    },
+    "implied": {
+      "marketProbability": 32.5,
+      "yesBid": 32,
+      "yesAsk": 33,
+      "noBid": 67,
+      "noAsk": 68
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62700,
+      "targetPrice": 62702.4,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 2.4,
+      "distanceBps": 0.38,
+      "expectedStdPrice": 150.42,
+      "zScore": 0.016,
+      "modelProbability": 49.36,
+      "marketProbability": 32.5,
+      "edge": 16.86,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 49.36%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 32.5,
+      "modelProbability": 49.36,
+      "yes": {
+        "rawEdge": 16.86,
+        "adjustedEdge": 16.16,
+        "bid": 32,
+        "ask": 33,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -16.86,
+        "adjustedEdge": -17.56,
+        "bid": 67,
+        "ask": 68,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 16.86,
+      "bestAdjustedEdge": 16.16,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 98,
+      "explanation": "YES has the best adjusted edge at 16.16%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 16.16,
+      "confidenceScore": 98,
+      "modelProbability": 49.36,
+      "marketProbability": 32.5,
+      "paperTradeId": "PAPER-1782291001665-7868BA66"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240500-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782292801148-A7DF89",
+    "createdAt": "2026-06-24T09:20:01.148Z",
+    "marketTicker": "KXBTC15M-26JUN240530-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62664.83,
+    "targetPrice": 62696.16,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 73,
+      "noLevels": 122,
+      "yesTop": [
+        24,
+        399.83
+      ],
+      "noTop": [
+        75,
+        545.97
+      ]
+    },
+    "implied": {
+      "marketProbability": 24.5,
+      "yesBid": 24,
+      "yesAsk": 25,
+      "noBid": 75,
+      "noAsk": 76
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62664.83,
+      "targetPrice": 62696.16,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 31.33,
+      "distanceBps": 5,
+      "expectedStdPrice": 150.33,
+      "zScore": 0.208,
+      "modelProbability": 41.75,
+      "marketProbability": 24.5,
+      "edge": 17.25,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 41.75%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 24.5,
+      "modelProbability": 41.75,
+      "yes": {
+        "rawEdge": 17.25,
+        "adjustedEdge": 16.55,
+        "bid": 24,
+        "ask": 25,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -17.25,
+        "adjustedEdge": -17.95,
+        "bid": 75,
+        "ask": 76,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 17.25,
+      "bestAdjustedEdge": 16.55,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 16.55%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 16.55,
+      "confidenceScore": 100,
+      "modelProbability": 41.75,
+      "marketProbability": 24.5,
+      "paperTradeId": "PAPER-1782292801147-CCECB222"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240530-30",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:30:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782293095404-D9C8FB",
+    "createdAt": "2026-06-24T09:24:55.404Z",
+    "marketTicker": "KXBTC15M-26JUN240530-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62656.25,
+    "targetPrice": 62696.16,
+    "minutesRemaining": 6,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 34,
+      "noLevels": 175,
+      "yesTop": [
+        4.5,
+        15
+      ],
+      "noTop": [
+        95,
+        228
+      ]
+    },
+    "implied": {
+      "marketProbability": 4.75,
+      "yesBid": 4.5,
+      "yesAsk": 5,
+      "noBid": 95,
+      "noAsk": 95.5
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62656.25,
+      "targetPrice": 62696.16,
+      "direction": "UP",
+      "minutesRemaining": 6,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 39.91,
+      "distanceBps": 6.37,
+      "expectedStdPrice": 116.43,
+      "zScore": 0.343,
+      "modelProbability": 36.59,
+      "marketProbability": 4.75,
+      "edge": 31.84,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 6 minutes. Model YES probability is 36.59%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 4.75,
+      "modelProbability": 36.59,
+      "yes": {
+        "rawEdge": 31.84,
+        "adjustedEdge": 31.39,
+        "bid": 4.5,
+        "ask": 5,
+        "spread": 0.5
+      },
+      "no": {
+        "rawEdge": -31.84,
+        "adjustedEdge": -32.29,
+        "bid": 95,
+        "ask": 95.5,
+        "spread": 0.5
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 31.84,
+      "bestAdjustedEdge": 31.39,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 31.39%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "RISK",
+      "action": "RISK_REJECTED",
+      "reason": "POSITION_ALREADY_OPEN_THIS_MARKET",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 30.96,
+      "confidenceScore": 100,
+      "modelProbability": 36.16,
+      "marketProbability": 4.75,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240530-30",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:30:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782293101468-36AA7A",
+    "createdAt": "2026-06-24T09:25:01.468Z",
+    "marketTicker": "KXBTC15M-26JUN240530-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62656.55,
+    "targetPrice": 62696.16,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 37,
+      "noLevels": 175,
+      "yesTop": [
+        4.8,
+        11
+      ],
+      "noTop": [
+        95,
+        87.03
+      ]
+    },
+    "implied": {
+      "marketProbability": 4.9,
+      "yesBid": 4.8,
+      "yesAsk": 5,
+      "noBid": 95,
+      "noAsk": 95.2
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62656.55,
+      "targetPrice": 62696.16,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 39.61,
+      "distanceBps": 6.32,
+      "expectedStdPrice": 106.29,
+      "zScore": 0.373,
+      "modelProbability": 35.47,
+      "marketProbability": 4.9,
+      "edge": 30.57,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 35.47%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 4.9,
+      "modelProbability": 35.47,
+      "yes": {
+        "rawEdge": 30.57,
+        "adjustedEdge": 30.27,
+        "bid": 4.8,
+        "ask": 5,
+        "spread": 0.2
+      },
+      "no": {
+        "rawEdge": -30.57,
+        "adjustedEdge": -30.87,
+        "bid": 95,
+        "ask": 95.2,
+        "spread": 0.2
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 30.57,
+      "bestAdjustedEdge": 30.27,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 30.27%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "RISK",
+      "action": "RISK_REJECTED",
+      "reason": "POSITION_ALREADY_OPEN_THIS_MARKET",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 30.27,
+      "confidenceScore": 100,
+      "modelProbability": 35.47,
+      "marketProbability": 4.9,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240530-30",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:30:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782293406769-30E0BA",
+    "createdAt": "2026-06-24T09:30:06.769Z",
+    "marketTicker": "KXBTC15M-26JUN240530-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62630.24,
+    "targetPrice": 62696.16,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T09:30:00Z",
+      "created_time": "2026-06-24T00:00:47.212622Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240530",
+      "expected_expiration_time": "2026-06-24T09:35:00Z",
+      "expiration_time": "2026-07-01T09:30:00Z",
+      "expiration_value": "",
+      "floor_strike": 62696.16,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0010",
+      "latest_expiration_time": "2026-07-01T09:30:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "1.0000",
+      "no_bid_dollars": "0.9990",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T09:35:00Z",
+      "open_interest_fp": "214643.69",
+      "open_time": "2026-06-24T09:15:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 5:30 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 5:15 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "closed",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240530-30",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T09:15:00.567503Z",
+      "volume_24h_fp": "219078.99",
+      "volume_fp": "520877.92",
+      "yes_ask_dollars": "0.0010",
+      "yes_ask_size_fp": "21044.86",
+      "yes_bid_dollars": "0.0000",
+      "yes_bid_size_fp": "0.00",
+      "yes_sub_title": "Target Price: $62,696.16"
+    }
+  },
+  {
+    "id": "SNAP-1782293702171-F35920",
+    "createdAt": "2026-06-24T09:35:02.171Z",
+    "marketTicker": "KXBTC15M-26JUN240545-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62638.68,
+    "targetPrice": 62617.03,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 87,
+      "noLevels": 106,
+      "yesTop": [
+        39,
+        469.14
+      ],
+      "noTop": [
+        58,
+        5165.8
+      ]
+    },
+    "implied": {
+      "marketProbability": 40.5,
+      "yesBid": 39,
+      "yesAsk": 42,
+      "noBid": 58,
+      "noAsk": 61
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62638.68,
+      "targetPrice": 62617.03,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -21.65,
+      "distanceBps": 3.46,
+      "expectedStdPrice": 150.27,
+      "zScore": -0.144,
+      "modelProbability": 55.73,
+      "marketProbability": 40.5,
+      "edge": 15.23,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 55.73%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 40.5,
+      "modelProbability": 55.73,
+      "yes": {
+        "rawEdge": 15.23,
+        "adjustedEdge": 13.53,
+        "bid": 39,
+        "ask": 42,
+        "spread": 3
+      },
+      "no": {
+        "rawEdge": -15.23,
+        "adjustedEdge": -16.93,
+        "bid": 58,
+        "ask": 61,
+        "spread": 3
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 15.23,
+      "bestAdjustedEdge": 13.53,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 91,
+      "explanation": "YES has the best adjusted edge at 13.53%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 12.82,
+      "confidenceScore": 88,
+      "modelProbability": 55.02,
+      "marketProbability": 40.5,
+      "paperTradeId": "PAPER-1782293702169-F969ABDA"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240545-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782294001595-590844",
+    "createdAt": "2026-06-24T09:40:01.595Z",
+    "marketTicker": "KXBTC15M-26JUN240545-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62638.57,
+    "targetPrice": 62617.03,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 94,
+      "noLevels": 96,
+      "yesTop": [
+        48,
+        1381.6
+      ],
+      "noTop": [
+        50,
+        2171.45
+      ]
+    },
+    "implied": {
+      "marketProbability": 49,
+      "yesBid": 48,
+      "yesAsk": 50,
+      "noBid": 50,
+      "noAsk": 52
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62638.57,
+      "targetPrice": 62617.03,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -21.54,
+      "distanceBps": 3.44,
+      "expectedStdPrice": 106.26,
+      "zScore": -0.203,
+      "modelProbability": 58.03,
+      "marketProbability": 49,
+      "edge": 9.03,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 58.03%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 49,
+      "modelProbability": 58.03,
+      "yes": {
+        "rawEdge": 9.03,
+        "adjustedEdge": 7.83,
+        "bid": 48,
+        "ask": 50,
+        "spread": 2
+      },
+      "no": {
+        "rawEdge": -9.03,
+        "adjustedEdge": -10.23,
+        "bid": 50,
+        "ask": 52,
+        "spread": 2
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 9.03,
+      "bestAdjustedEdge": 7.83,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 73,
+      "explanation": "YES has the best adjusted edge at 7.83%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "DECISION",
+      "action": "NO_PAPER_TRADE",
+      "reason": "MISPRICING_DECISION_WATCH",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 7.83,
+      "confidenceScore": 73,
+      "modelProbability": 58.03,
+      "marketProbability": 49,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240545-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T09:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782294301098-1484E7",
+    "createdAt": "2026-06-24T09:45:01.098Z",
+    "marketTicker": "KXBTC15M-26JUN240545-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62608.05,
+    "targetPrice": 62617.03,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T09:45:00Z",
+      "created_time": "2026-06-24T00:00:47.592195Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240545",
+      "expected_expiration_time": "2026-06-24T09:50:00Z",
+      "expiration_time": "2026-07-01T09:45:00Z",
+      "expiration_value": "",
+      "floor_strike": 62617.03,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0040",
+      "latest_expiration_time": "2026-07-01T09:45:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "0.9980",
+      "no_bid_dollars": "0.9970",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T09:50:00Z",
+      "open_interest_fp": "188280.71",
+      "open_time": "2026-06-24T09:30:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 5:45 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 5:30 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240545-45",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T09:30:00.644829Z",
+      "volume_24h_fp": "460664.13",
+      "volume_fp": "648103.04",
+      "yes_ask_dollars": "0.0030",
+      "yes_ask_size_fp": "122.00",
+      "yes_bid_dollars": "0.0020",
+      "yes_bid_size_fp": "429.00",
+      "yes_sub_title": "Target Price: $62,617.03"
+    }
+  },
+  {
+    "id": "SNAP-1782294601324-87B3D7",
+    "createdAt": "2026-06-24T09:50:01.324Z",
+    "marketTicker": "KXBTC15M-26JUN240600-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62624.55,
+    "targetPrice": 62592.99,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 109,
+      "noLevels": 90,
+      "yesTop": [
+        59,
+        347.45
+      ],
+      "noTop": [
+        40,
+        1043.1
+      ]
+    },
+    "implied": {
+      "marketProbability": 59.5,
+      "yesBid": 59,
+      "yesAsk": 60,
+      "noBid": 40,
+      "noAsk": 41
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62624.55,
+      "targetPrice": 62592.99,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -31.56,
+      "distanceBps": 5.04,
+      "expectedStdPrice": 150.24,
+      "zScore": -0.21,
+      "modelProbability": 58.32,
+      "marketProbability": 59.5,
+      "edge": -1.18,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 58.32%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 59.5,
+      "modelProbability": 58.32,
+      "yes": {
+        "rawEdge": -1.18,
+        "adjustedEdge": -1.88,
+        "bid": 59,
+        "ask": 60,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": 1.18,
+        "adjustedEdge": 0.48,
+        "bid": 40,
+        "ask": 41,
+        "spread": 1
+      },
+      "bestSide": "NO",
+      "bestRawEdge": 1.18,
+      "bestAdjustedEdge": 0.48,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "NO_TRADE",
+      "edgeGrade": "NONE",
+      "confidenceScore": 51,
+      "explanation": "NO has the best adjusted edge at 0.48%. Decision: NO_TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "DECISION",
+      "action": "NO_PAPER_TRADE",
+      "reason": "MISPRICING_DECISION_NO_TRADE",
+      "bestSide": "NO",
+      "bestAdjustedEdge": 0.48,
+      "confidenceScore": 51,
+      "modelProbability": 58.32,
+      "marketProbability": 59.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240600-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782294902215-504A34",
+    "createdAt": "2026-06-24T09:55:02.215Z",
+    "marketTicker": "KXBTC15M-26JUN240600-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62636.07,
+    "targetPrice": 62592.99,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 123,
+      "noLevels": 73,
+      "yesTop": [
+        75,
+        3647.05
+      ],
+      "noTop": [
+        24,
+        44.87
+      ]
+    },
+    "implied": {
+      "marketProbability": 75.5,
+      "yesBid": 75,
+      "yesAsk": 76,
+      "noBid": 24,
+      "noAsk": 25
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62636.07,
+      "targetPrice": 62592.99,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -43.08,
+      "distanceBps": 6.88,
+      "expectedStdPrice": 106.25,
+      "zScore": -0.405,
+      "modelProbability": 65.74,
+      "marketProbability": 75.5,
+      "edge": -9.76,
+      "reachabilityGrade": "HIGH",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 65.74%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 75.5,
+      "modelProbability": 65.74,
+      "yes": {
+        "rawEdge": -9.76,
+        "adjustedEdge": -10.46,
+        "bid": 75,
+        "ask": 76,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": 9.76,
+        "adjustedEdge": 9.06,
+        "bid": 24,
+        "ask": 25,
+        "spread": 1
+      },
+      "bestSide": "NO",
+      "bestRawEdge": 9.76,
+      "bestAdjustedEdge": 9.06,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 77,
+      "explanation": "NO has the best adjusted edge at 9.06%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "NO",
+      "bestAdjustedEdge": 10.33,
+      "confidenceScore": 81,
+      "modelProbability": 64.47,
+      "marketProbability": 75.5,
+      "paperTradeId": "PAPER-1782294902214-A9ED5223"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240600-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782295209280-F7BB41",
+    "createdAt": "2026-06-24T10:00:09.280Z",
+    "marketTicker": "KXBTC15M-26JUN240600-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62631.2,
+    "targetPrice": 62592.99,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T10:00:00Z",
+      "created_time": "2026-06-24T00:00:47.990335Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240600",
+      "expected_expiration_time": "2026-06-24T10:05:00Z",
+      "expiration_time": "2026-07-01T10:00:00Z",
+      "expiration_value": "",
+      "floor_strike": 62592.99,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.9990",
+      "latest_expiration_time": "2026-07-01T10:00:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "0.0010",
+      "no_bid_dollars": "0.0000",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T10:05:00Z",
+      "open_interest_fp": "209900.17",
+      "open_time": "2026-06-24T09:45:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:00 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 5:45 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "closed",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240600-00",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T09:45:00.567337Z",
+      "volume_24h_fp": "214753.84",
+      "volume_fp": "611666.90",
+      "yes_ask_dollars": "1.0000",
+      "yes_ask_size_fp": "0.00",
+      "yes_bid_dollars": "0.9990",
+      "yes_bid_size_fp": "28191.26",
+      "yes_sub_title": "Target Price: $62,592.99"
+    }
+  },
+  {
+    "id": "SNAP-1782295503132-D4A0F5",
+    "createdAt": "2026-06-24T10:05:03.133Z",
+    "marketTicker": "KXBTC15M-26JUN240615-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62571.3,
+    "targetPrice": 62625.55,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 63,
+      "noLevels": 133,
+      "yesTop": [
+        13,
+        436.27
+      ],
+      "noTop": [
+        86,
+        1376.88
+      ]
+    },
+    "implied": {
+      "marketProbability": 13.5,
+      "yesBid": 13,
+      "yesAsk": 14,
+      "noBid": 86,
+      "noAsk": 87
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62571.3,
+      "targetPrice": 62625.55,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 54.25,
+      "distanceBps": 8.67,
+      "expectedStdPrice": 150.11,
+      "zScore": 0.361,
+      "modelProbability": 35.89,
+      "marketProbability": 13.5,
+      "edge": 22.39,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 35.89%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 13.5,
+      "modelProbability": 35.89,
+      "yes": {
+        "rawEdge": 22.39,
+        "adjustedEdge": 21.69,
+        "bid": 13,
+        "ask": 14,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -22.39,
+        "adjustedEdge": -23.09,
+        "bid": 86,
+        "ask": 87,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 22.39,
+      "bestAdjustedEdge": 21.69,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 21.69%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 21.69,
+      "confidenceScore": 100,
+      "modelProbability": 35.89,
+      "marketProbability": 13.5,
+      "paperTradeId": "PAPER-1782295503131-EC641D63"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240615-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782295810938-9F9E4A",
+    "createdAt": "2026-06-24T10:10:10.938Z",
+    "marketTicker": "KXBTC15M-26JUN240615-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62584.7,
+    "targetPrice": 62625.55,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 27,
+      "noLevels": 185,
+      "yesTop": [
+        3.2,
+        1266
+      ],
+      "noTop": [
+        96.5,
+        16
+      ]
+    },
+    "implied": {
+      "marketProbability": 3.35,
+      "yesBid": 3.2,
+      "yesAsk": 3.5,
+      "noBid": 96.5,
+      "noAsk": 96.8
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62584.7,
+      "targetPrice": 62625.55,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 40.85,
+      "distanceBps": 6.53,
+      "expectedStdPrice": 106.17,
+      "zScore": 0.385,
+      "modelProbability": 35.02,
+      "marketProbability": 3.35,
+      "edge": 31.67,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 35.02%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 3.35,
+      "modelProbability": 35.02,
+      "yes": {
+        "rawEdge": 31.67,
+        "adjustedEdge": 31.32,
+        "bid": 3.2,
+        "ask": 3.5,
+        "spread": 0.3
+      },
+      "no": {
+        "rawEdge": -31.67,
+        "adjustedEdge": -32.02,
+        "bid": 96.5,
+        "ask": 96.8,
+        "spread": 0.3
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 31.67,
+      "bestAdjustedEdge": 31.32,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 31.32%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "RISK",
+      "action": "RISK_REJECTED",
+      "reason": "POSITION_ALREADY_OPEN_THIS_MARKET",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 29.14,
+      "confidenceScore": 100,
+      "modelProbability": 32.84,
+      "marketProbability": 3.35,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240615-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782296102207-E950C1",
+    "createdAt": "2026-06-24T10:15:02.207Z",
+    "marketTicker": "KXBTC15M-26JUN240615-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62554.02,
+    "targetPrice": 62625.55,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T10:15:00Z",
+      "created_time": "2026-06-24T00:00:48.431364Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240615",
+      "expected_expiration_time": "2026-06-24T10:20:00Z",
+      "expiration_time": "2026-07-01T10:15:00Z",
+      "expiration_value": "",
+      "floor_strike": 62625.55,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0010",
+      "latest_expiration_time": "2026-07-01T10:15:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "1.0000",
+      "no_bid_dollars": "0.9990",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T10:20:00Z",
+      "open_interest_fp": "195641.68",
+      "open_time": "2026-06-24T10:00:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:15 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:00 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240615-15",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T10:00:00.790525Z",
+      "volume_24h_fp": "377681.46",
+      "volume_fp": "484882.21",
+      "yes_ask_dollars": "0.0010",
+      "yes_ask_size_fp": "38850.81",
+      "yes_bid_dollars": "0.0000",
+      "yes_bid_size_fp": "0.00",
+      "yes_sub_title": "Target Price: $62,625.55"
+    }
+  },
+  {
+    "id": "SNAP-1782296401205-D71309",
+    "createdAt": "2026-06-24T10:20:01.205Z",
+    "marketTicker": "KXBTC15M-26JUN240630-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62484.44,
+    "targetPrice": 62526.15,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 70,
+      "noLevels": 126,
+      "yesTop": [
+        20,
+        3733.1
+      ],
+      "noTop": [
+        79,
+        1045.1
+      ]
+    },
+    "implied": {
+      "marketProbability": 20.5,
+      "yesBid": 20,
+      "yesAsk": 21,
+      "noBid": 79,
+      "noAsk": 80
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62484.44,
+      "targetPrice": 62526.15,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 41.71,
+      "distanceBps": 6.68,
+      "expectedStdPrice": 149.9,
+      "zScore": 0.278,
+      "modelProbability": 39.04,
+      "marketProbability": 20.5,
+      "edge": 18.54,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 39.04%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 20.5,
+      "modelProbability": 39.04,
+      "yes": {
+        "rawEdge": 18.54,
+        "adjustedEdge": 17.84,
+        "bid": 20,
+        "ask": 21,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -18.54,
+        "adjustedEdge": -19.24,
+        "bid": 79,
+        "ask": 80,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 18.54,
+      "bestAdjustedEdge": 17.84,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 17.84%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 17.83,
+      "confidenceScore": 100,
+      "modelProbability": 39.03,
+      "marketProbability": 20.5,
+      "paperTradeId": "PAPER-1782296401203-563E3E5C"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240630-30",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:30:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782296703493-844A8C",
+    "createdAt": "2026-06-24T10:25:03.493Z",
+    "marketTicker": "KXBTC15M-26JUN240630-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62513.43,
+    "targetPrice": 62526.15,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 83,
+      "noLevels": 126,
+      "yesTop": [
+        21,
+        859.83
+      ],
+      "noTop": [
+        78,
+        2227.73
+      ]
+    },
+    "implied": {
+      "marketProbability": 21.5,
+      "yesBid": 21,
+      "yesAsk": 22,
+      "noBid": 78,
+      "noAsk": 79
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62513.43,
+      "targetPrice": 62526.15,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 12.72,
+      "distanceBps": 2.03,
+      "expectedStdPrice": 106.05,
+      "zScore": 0.12,
+      "modelProbability": 45.23,
+      "marketProbability": 21.5,
+      "edge": 23.73,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 45.23%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 21.5,
+      "modelProbability": 45.23,
+      "yes": {
+        "rawEdge": 23.73,
+        "adjustedEdge": 23.03,
+        "bid": 21,
+        "ask": 22,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -23.73,
+        "adjustedEdge": -24.43,
+        "bid": 78,
+        "ask": 79,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 23.73,
+      "bestAdjustedEdge": 23.03,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 23.03%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "RISK",
+      "action": "RISK_REJECTED",
+      "reason": "POSITION_ALREADY_OPEN_THIS_MARKET",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 22.97,
+      "confidenceScore": 100,
+      "modelProbability": 45.17,
+      "marketProbability": 21.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240630-30",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:30:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782297005564-06A092",
+    "createdAt": "2026-06-24T10:30:05.564Z",
+    "marketTicker": "KXBTC15M-26JUN240630-30",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62489.11,
+    "targetPrice": 62526.15,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T10:30:00Z",
+      "created_time": "2026-06-24T00:00:48.870229Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240630",
+      "expected_expiration_time": "2026-06-24T10:35:00Z",
+      "expiration_time": "2026-07-01T10:30:00Z",
+      "expiration_value": "",
+      "floor_strike": 62526.15,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0010",
+      "latest_expiration_time": "2026-07-01T10:30:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "1.0000",
+      "no_bid_dollars": "0.9990",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T10:35:00Z",
+      "open_interest_fp": "223617.60",
+      "open_time": "2026-06-24T10:15:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:30 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:15 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240630-30",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T10:15:00.567164Z",
+      "volume_24h_fp": "229937.66",
+      "volume_fp": "703993.78",
+      "yes_ask_dollars": "0.0010",
+      "yes_ask_size_fp": "71678.83",
+      "yes_bid_dollars": "0.0000",
+      "yes_bid_size_fp": "0.00",
+      "yes_sub_title": "Target Price: $62,526.15"
+    }
+  },
+  {
+    "id": "SNAP-1782297301466-0C09A4",
+    "createdAt": "2026-06-24T10:35:01.466Z",
+    "marketTicker": "KXBTC15M-26JUN240645-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62526.1,
+    "targetPrice": 62466.35,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 122,
+      "noLevels": 72,
+      "yesTop": [
+        75,
+        1588.57
+      ],
+      "noTop": [
+        24,
+        63.41
+      ]
+    },
+    "implied": {
+      "marketProbability": 75.5,
+      "yesBid": 75,
+      "yesAsk": 76,
+      "noBid": 24,
+      "noAsk": 25
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62526.1,
+      "targetPrice": 62466.35,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -59.75,
+      "distanceBps": 9.56,
+      "expectedStdPrice": 150,
+      "zScore": -0.398,
+      "modelProbability": 65.48,
+      "marketProbability": 75.5,
+      "edge": -10.02,
+      "reachabilityGrade": "HIGH",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 65.48%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 75.5,
+      "modelProbability": 65.48,
+      "yes": {
+        "rawEdge": -10.02,
+        "adjustedEdge": -10.72,
+        "bid": 75,
+        "ask": 76,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": 10.02,
+        "adjustedEdge": 9.32,
+        "bid": 24,
+        "ask": 25,
+        "spread": 1
+      },
+      "bestSide": "NO",
+      "bestRawEdge": 10.02,
+      "bestAdjustedEdge": 9.32,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 78,
+      "explanation": "NO has the best adjusted edge at 9.32%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "DECISION",
+      "action": "NO_PAPER_TRADE",
+      "reason": "MISPRICING_DECISION_WATCH",
+      "bestSide": "NO",
+      "bestAdjustedEdge": 9.02,
+      "confidenceScore": 77,
+      "modelProbability": 65.78,
+      "marketProbability": 75.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240645-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782297602336-244DC9",
+    "createdAt": "2026-06-24T10:40:02.336Z",
+    "marketTicker": "KXBTC15M-26JUN240645-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62539.83,
+    "targetPrice": 62466.35,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 152,
+      "noLevels": 52,
+      "yesTop": [
+        91.8,
+        116
+      ],
+      "noTop": [
+        8.1,
+        4397.06
+      ]
+    },
+    "implied": {
+      "marketProbability": 91.85,
+      "yesBid": 91.8,
+      "yesAsk": 91.9,
+      "noBid": 8.1,
+      "noAsk": 8.200000000000003
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62539.83,
+      "targetPrice": 62466.35,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -73.48,
+      "distanceBps": 11.75,
+      "expectedStdPrice": 106.09,
+      "zScore": -0.693,
+      "modelProbability": 75.57,
+      "marketProbability": 91.85,
+      "edge": -16.28,
+      "reachabilityGrade": "HIGH",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 75.57%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 91.85,
+      "modelProbability": 75.57,
+      "yes": {
+        "rawEdge": -16.28,
+        "adjustedEdge": -16.53,
+        "bid": 91.8,
+        "ask": 91.9,
+        "spread": 0.1
+      },
+      "no": {
+        "rawEdge": 16.28,
+        "adjustedEdge": 16.03,
+        "bid": 8.1,
+        "ask": 8.200000000000003,
+        "spread": 0.1
+      },
+      "bestSide": "NO",
+      "bestRawEdge": 16.28,
+      "bestAdjustedEdge": 16.03,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 98,
+      "explanation": "NO has the best adjusted edge at 16.03%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "NO",
+      "bestAdjustedEdge": 16.49,
+      "confidenceScore": 99,
+      "modelProbability": 75.11,
+      "marketProbability": 91.85,
+      "paperTradeId": "PAPER-1782297602334-CFD978F3"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240645-45",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T10:45:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782297904221-D98ACA",
+    "createdAt": "2026-06-24T10:45:04.221Z",
+    "marketTicker": "KXBTC15M-26JUN240645-45",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62548.37,
+    "targetPrice": 62466.35,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T10:45:00Z",
+      "created_time": "2026-06-24T00:00:49.28137Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240645",
+      "expected_expiration_time": "2026-06-24T10:50:00Z",
+      "expiration_time": "2026-07-01T10:45:00Z",
+      "expiration_value": "",
+      "floor_strike": 62466.35,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.9990",
+      "latest_expiration_time": "2026-07-01T10:45:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "0.0010",
+      "no_bid_dollars": "0.0000",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T10:50:00Z",
+      "open_interest_fp": "222225.74",
+      "open_time": "2026-06-24T10:30:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:45 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:30 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240645-45",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T10:30:00.56751Z",
+      "volume_24h_fp": "403239.43",
+      "volume_fp": "614551.06",
+      "yes_ask_dollars": "1.0000",
+      "yes_ask_size_fp": "0.00",
+      "yes_bid_dollars": "0.9990",
+      "yes_bid_size_fp": "52842.37",
+      "yes_sub_title": "Target Price: $62,466.35"
+    }
+  },
+  {
+    "id": "SNAP-1782298201794-14F837",
+    "createdAt": "2026-06-24T10:50:01.794Z",
+    "marketTicker": "KXBTC15M-26JUN240700-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62492.24,
+    "targetPrice": 62529.19,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 67,
+      "noLevels": 128,
+      "yesTop": [
+        17,
+        803.87
+      ],
+      "noTop": [
+        82,
+        1934.42
+      ]
+    },
+    "implied": {
+      "marketProbability": 17.5,
+      "yesBid": 17,
+      "yesAsk": 18,
+      "noBid": 82,
+      "noAsk": 83
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62492.24,
+      "targetPrice": 62529.19,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 36.95,
+      "distanceBps": 5.91,
+      "expectedStdPrice": 149.92,
+      "zScore": 0.246,
+      "modelProbability": 40.27,
+      "marketProbability": 17.5,
+      "edge": 22.77,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 40.27%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 17.5,
+      "modelProbability": 40.27,
+      "yes": {
+        "rawEdge": 22.77,
+        "adjustedEdge": 22.07,
+        "bid": 17,
+        "ask": 18,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -22.77,
+        "adjustedEdge": -23.47,
+        "bid": 82,
+        "ask": 83,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 22.77,
+      "bestAdjustedEdge": 22.07,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 100,
+      "explanation": "YES has the best adjusted edge at 22.07%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 22.02,
+      "confidenceScore": 100,
+      "modelProbability": 40.22,
+      "marketProbability": 17.5,
+      "paperTradeId": "PAPER-1782298201793-8736649D"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240700-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T11:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782298503325-1E3DF4",
+    "createdAt": "2026-06-24T10:55:03.325Z",
+    "marketTicker": "KXBTC15M-26JUN240700-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62431.38,
+    "targetPrice": 62529.19,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 10,
+      "noLevels": 196,
+      "yesTop": [
+        1.1,
+        311.66
+      ],
+      "noTop": [
+        98.8,
+        1296.23
+      ]
+    },
+    "implied": {
+      "marketProbability": 1.15,
+      "yesBid": 1.1,
+      "yesAsk": 1.2000000000000028,
+      "noBid": 98.8,
+      "noAsk": 98.9
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62431.38,
+      "targetPrice": 62529.19,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 97.81,
+      "distanceBps": 15.67,
+      "expectedStdPrice": 105.91,
+      "zScore": 0.924,
+      "modelProbability": 17.79,
+      "marketProbability": 1.15,
+      "edge": 16.64,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 17.79%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 1.15,
+      "modelProbability": 17.79,
+      "yes": {
+        "rawEdge": 16.64,
+        "adjustedEdge": 16.39,
+        "bid": 1.1,
+        "ask": 1.2000000000000028,
+        "spread": 0.1
+      },
+      "no": {
+        "rawEdge": -16.64,
+        "adjustedEdge": -16.89,
+        "bid": 98.8,
+        "ask": 98.9,
+        "spread": 0.1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 16.64,
+      "bestAdjustedEdge": 16.39,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 99,
+      "explanation": "YES has the best adjusted edge at 16.39%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "TARGET_DISTANCE",
+      "action": "NO_PAPER_TRADE",
+      "reason": "TARGET_TOO_FAR_WATCH_ONLY",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 16.31,
+      "confidenceScore": 99,
+      "modelProbability": 17.71,
+      "marketProbability": 1.15,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240700-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T11:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782298807200-BF415C",
+    "createdAt": "2026-06-24T11:00:07.200Z",
+    "marketTicker": "KXBTC15M-26JUN240700-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62390.68,
+    "targetPrice": 62529.19,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T11:00:00Z",
+      "created_time": "2026-06-24T00:00:49.657304Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240700",
+      "expected_expiration_time": "2026-06-24T11:05:00Z",
+      "expiration_time": "2026-07-01T11:00:00Z",
+      "expiration_value": "",
+      "floor_strike": 62529.19,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0010",
+      "latest_expiration_time": "2026-07-01T11:00:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "1.0000",
+      "no_bid_dollars": "0.9990",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T11:05:00Z",
+      "open_interest_fp": "175083.06",
+      "open_time": "2026-06-24T10:45:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 7:00 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 6:45 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240700-00",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T10:45:00.567607Z",
+      "volume_24h_fp": "149009.98",
+      "volume_fp": "350161.59",
+      "yes_ask_dollars": "0.0010",
+      "yes_ask_size_fp": "84634.31",
+      "yes_bid_dollars": "0.0000",
+      "yes_bid_size_fp": "0.00",
+      "yes_sub_title": "Target Price: $62,529.19"
+    }
+  },
+  {
+    "id": "SNAP-1782299101336-5EF948",
+    "createdAt": "2026-06-24T11:05:01.336Z",
+    "marketTicker": "KXBTC15M-26JUN240715-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62372.36,
+    "targetPrice": 62368.35,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 89,
+      "noLevels": 109,
+      "yesTop": [
+        38,
+        17.78
+      ],
+      "noTop": [
+        61,
+        1348.92
+      ]
+    },
+    "implied": {
+      "marketProbability": 38.5,
+      "yesBid": 38,
+      "yesAsk": 39,
+      "noBid": 61,
+      "noAsk": 62
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62372.36,
+      "targetPrice": 62368.35,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -4.01,
+      "distanceBps": 0.64,
+      "expectedStdPrice": 149.63,
+      "zScore": -0.027,
+      "modelProbability": 51.07,
+      "marketProbability": 38.5,
+      "edge": 12.57,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 51.07%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 38.5,
+      "modelProbability": 51.07,
+      "yes": {
+        "rawEdge": 12.57,
+        "adjustedEdge": 11.87,
+        "bid": 38,
+        "ask": 39,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -12.57,
+        "adjustedEdge": -13.27,
+        "bid": 61,
+        "ask": 62,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 12.57,
+      "bestAdjustedEdge": 11.87,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 86,
+      "explanation": "YES has the best adjusted edge at 11.87%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "PAPER_TRADE_CREATED",
+      "action": "PAPER_TRADE_CREATED",
+      "reason": "TRADE_CREATED",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 11.55,
+      "confidenceScore": 85,
+      "modelProbability": 50.75,
+      "marketProbability": 38.5,
+      "paperTradeId": "PAPER-1782299101333-CF6A073D"
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240715-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T11:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782299401634-CA4677",
+    "createdAt": "2026-06-24T11:10:01.634Z",
+    "marketTicker": "KXBTC15M-26JUN240715-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62272.06,
+    "targetPrice": 62368.35,
+    "minutesRemaining": 5,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 14,
+      "noLevels": 195,
+      "yesTop": [
+        1.9,
+        4949
+      ],
+      "noTop": [
+        98,
+        327
+      ]
+    },
+    "implied": {
+      "marketProbability": 1.95,
+      "yesBid": 1.9,
+      "yesAsk": 2,
+      "noBid": 98,
+      "noAsk": 98.1
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 62272.06,
+      "targetPrice": 62368.35,
+      "direction": "UP",
+      "minutesRemaining": 5,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 96.29,
+      "distanceBps": 15.46,
+      "expectedStdPrice": 105.64,
+      "zScore": 0.912,
+      "modelProbability": 18.1,
+      "marketProbability": 1.95,
+      "edge": 16.15,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 5 minutes. Model YES probability is 18.1%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 1.95,
+      "modelProbability": 18.1,
+      "yes": {
+        "rawEdge": 16.15,
+        "adjustedEdge": 15.9,
+        "bid": 1.9,
+        "ask": 2,
+        "spread": 0.1
+      },
+      "no": {
+        "rawEdge": -16.15,
+        "adjustedEdge": -16.4,
+        "bid": 98,
+        "ask": 98.1,
+        "spread": 0.1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 16.15,
+      "bestAdjustedEdge": 15.9,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 98,
+      "explanation": "YES has the best adjusted edge at 15.9%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "TARGET_DISTANCE",
+      "action": "NO_PAPER_TRADE",
+      "reason": "TARGET_TOO_FAR_WATCH_ONLY",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 15.39,
+      "confidenceScore": 96,
+      "modelProbability": 17.59,
+      "marketProbability": 1.95,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN240715-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-24T11:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782299703805-E62851",
+    "createdAt": "2026-06-24T11:15:03.805Z",
+    "marketTicker": "KXBTC15M-26JUN240715-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 62326.2,
+    "targetPrice": 62368.35,
+    "minutesRemaining": 15,
+    "orderbook": {
+      "yesLevels": 0,
+      "noLevels": 0
+    },
+    "implied": {
+      "marketProbability": null,
+      "yesBid": null,
+      "yesAsk": null,
+      "noBid": null,
+      "noAsk": null
+    },
+    "decision": {
+      "action": "SKIPPED",
+      "reason": "MARKET_PROBABILITY_NOT_AVAILABLE"
+    },
+    "rawMarket": {
+      "can_close_early": true,
+      "close_time": "2026-06-24T11:15:00Z",
+      "created_time": "2026-06-24T00:00:50.028298Z",
+      "custom_strike": {
+        "round_digits": "2"
+      },
+      "event_ticker": "KXBTC15M-26JUN240715",
+      "expected_expiration_time": "2026-06-24T11:20:00Z",
+      "expiration_time": "2026-07-01T11:15:00Z",
+      "expiration_value": "",
+      "floor_strike": 62368.35,
+      "fractional_trading_enabled": true,
+      "last_price_dollars": "0.0010",
+      "latest_expiration_time": "2026-07-01T11:15:00Z",
+      "liquidity_dollars": "0.0000",
+      "market_type": "binary",
+      "no_ask_dollars": "1.0000",
+      "no_bid_dollars": "0.9990",
+      "no_sub_title": "Target price: TBD",
+      "notional_value_dollars": "1.0000",
+      "occurrence_datetime": "2026-06-24T11:20:00Z",
+      "open_interest_fp": "325570.38",
+      "open_time": "2026-06-24T11:00:00Z",
+      "previous_price_dollars": "0.0000",
+      "previous_yes_ask_dollars": "0.0000",
+      "previous_yes_bid_dollars": "0.0000",
+      "price_level_structure": "tapered_deci_cent",
+      "price_ranges": [
+        {
+          "end": "0.1000",
+          "start": "0.0000",
+          "step": "0.0010"
+        },
+        {
+          "end": "0.9000",
+          "start": "0.1000",
+          "step": "0.0100"
+        },
+        {
+          "end": "1.0000",
+          "start": "0.9000",
+          "step": "0.0010"
+        }
+      ],
+      "response_price_units": "usd_cent",
+      "result": "",
+      "rules_primary": "If the simple average of the sixty seconds of CF Benchmarks' BRTI before 7:15 AM EDT on Jun 24, 2026 is at least the simple average of the sixty seconds of CF Benchmarks' BRTI before 7:00 AM EDT on June 24, 2026, then the market resolves to Yes.",
+      "rules_secondary": "Not all cryptocurrency price data is the same. While checking a source like Google or Coinbase may help guide your decision, the price used to determine this market is based on CF Benchmarks' corresponding Real Time Index (RTI). At the last minute before expiration, 60 RTI prices are collected. The official and final value is the average of these prices, rounded to the nearest 2 decimal places.",
+      "settlement_timer_seconds": 1,
+      "status": "active",
+      "strike_type": "greater_or_equal",
+      "ticker": "KXBTC15M-26JUN240715-15",
+      "title": "BTC price up in next 15 mins?",
+      "updated_time": "2026-06-24T11:00:00.743501Z",
+      "volume_24h_fp": "541030.35",
+      "volume_fp": "820505.03",
+      "yes_ask_dollars": "0.0010",
+      "yes_ask_size_fp": "60432.02",
+      "yes_bid_dollars": "0.0000",
+      "yes_bid_size_fp": "0.00",
+      "yes_sub_title": "Target Price: $62,368.35"
+    }
+  },
+  {
+    "id": "SNAP-1782406577171-6A5DC8",
+    "createdAt": "2026-06-25T16:56:17.171Z",
+    "marketTicker": "KXBTC15M-26JUN251300-00",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 59192.44,
+    "targetPrice": 59169.18,
+    "minutesRemaining": 4,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 101,
+      "noLevels": 93,
+      "yesTop": [
+        53,
+        498.45
+      ],
+      "noTop": [
+        46,
+        4360.5
+      ]
+    },
+    "implied": {
+      "marketProbability": 53.5,
+      "yesBid": 53,
+      "yesAsk": 54,
+      "noBid": 46,
+      "noAsk": 47
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 59192.44,
+      "targetPrice": 59169.18,
+      "direction": "UP",
+      "minutesRemaining": 4,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": -23.26,
+      "distanceBps": 3.93,
+      "expectedStdPrice": 89.81,
+      "zScore": -0.259,
+      "modelProbability": 60.22,
+      "marketProbability": 53.5,
+      "edge": 6.72,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 4 minutes. Model YES probability is 60.22%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 53.5,
+      "modelProbability": 60.22,
+      "yes": {
+        "rawEdge": 6.72,
+        "adjustedEdge": 6.02,
+        "bid": 53,
+        "ask": 54,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -6.72,
+        "adjustedEdge": -7.42,
+        "bid": 46,
+        "ask": 47,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 6.72,
+      "bestAdjustedEdge": 6.02,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 68,
+      "explanation": "YES has the best adjusted edge at 6.02%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "STRATEGY_ZONE_GUARD",
+      "action": "NO_PAPER_TRADE",
+      "reason": "STRATEGY_ZONE_EDGE_OUT_OF_RANGE",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 6.59,
+      "confidenceScore": 70,
+      "modelProbability": 60.79,
+      "marketProbability": 53.5,
+      "paperTradeId": null
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN251300-00",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-25T17:00:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782414289401-8BBA2F",
+    "createdAt": "2026-06-25T19:04:49.401Z",
+    "marketTicker": "KXBTC15M-26JUN251515-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 59349.26,
+    "targetPrice": 59411.61,
+    "minutesRemaining": 11,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 73,
+      "noLevels": 105,
+      "yesTop": [
+        25,
+        140
+      ],
+      "noTop": [
+        74,
+        2973.04
+      ]
+    },
+    "implied": {
+      "marketProbability": 25.5,
+      "yesBid": 25,
+      "yesAsk": 26,
+      "noBid": 74,
+      "noAsk": 75
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 59349.26,
+      "targetPrice": 59411.61,
+      "direction": "UP",
+      "minutesRemaining": 11,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 62.35,
+      "distanceBps": 10.51,
+      "expectedStdPrice": 149.33,
+      "zScore": 0.418,
+      "modelProbability": 33.81,
+      "marketProbability": 25.5,
+      "edge": 8.31,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 11 minutes. Model YES probability is 33.81%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 25.5,
+      "modelProbability": 33.81,
+      "yes": {
+        "rawEdge": 8.31,
+        "adjustedEdge": 7.61,
+        "bid": 25,
+        "ask": 26,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -8.31,
+        "adjustedEdge": -9.01,
+        "bid": 74,
+        "ask": 75,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 8.31,
+      "bestAdjustedEdge": 7.61,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 73,
+      "explanation": "YES has the best adjusted edge at 7.61%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "OBSERVATION_ONLY",
+      "action": "OBSERVATION_ONLY",
+      "reason": "DRY_RUN_SCAN_ONLY",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 7.61,
+      "confidenceScore": 73,
+      "modelProbability": 33.81,
+      "marketProbability": 25.5
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN251515-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-25T19:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782414324737-289487",
+    "createdAt": "2026-06-25T19:05:24.737Z",
+    "marketTicker": "KXBTC15M-26JUN251515-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 59339.42,
+    "targetPrice": 59411.61,
+    "minutesRemaining": 10,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 70,
+      "noLevels": 106,
+      "yesTop": [
+        23,
+        2619.64
+      ],
+      "noTop": [
+        76,
+        1146.81
+      ]
+    },
+    "implied": {
+      "marketProbability": 23.5,
+      "yesBid": 23,
+      "yesAsk": 24,
+      "noBid": 76,
+      "noAsk": 77
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 59339.42,
+      "targetPrice": 59411.61,
+      "direction": "UP",
+      "minutesRemaining": 10,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 72.19,
+      "distanceBps": 12.17,
+      "expectedStdPrice": 142.36,
+      "zScore": 0.507,
+      "modelProbability": 30.6,
+      "marketProbability": 23.5,
+      "edge": 7.1,
+      "reachabilityGrade": "LOW",
+      "explanation": "BTC needs to settle at or above the target in 10 minutes. Model YES probability is 30.6%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 23.5,
+      "modelProbability": 30.6,
+      "yes": {
+        "rawEdge": 7.1,
+        "adjustedEdge": 6.4,
+        "bid": 23,
+        "ask": 24,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -7.1,
+        "adjustedEdge": -7.8,
+        "bid": 76,
+        "ask": 77,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 7.1,
+      "bestAdjustedEdge": 6.4,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "WATCH",
+      "edgeGrade": "MEDIUM",
+      "confidenceScore": 69,
+      "explanation": "YES has the best adjusted edge at 6.4%. Decision: WATCH."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "OBSERVATION_ONLY",
+      "action": "OBSERVATION_ONLY",
+      "reason": "DRY_RUN_SCAN_ONLY",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 6.4,
+      "confidenceScore": 69,
+      "modelProbability": 30.6,
+      "marketProbability": 23.5
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN251515-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-25T19:15:00Z"
+    }
+  },
+  {
+    "id": "SNAP-1782460887104-920BB5",
+    "createdAt": "2026-06-26T08:01:27.104Z",
+    "marketTicker": "KXBTC15M-26JUN260415-15",
+    "marketTitle": "BTC price up in next 15 mins?",
+    "btcPrice": 60445.86,
+    "targetPrice": 60470.94,
+    "minutesRemaining": 14,
+    "annualizedVolatility": 0.55,
+    "momentumBps": 0,
+    "orderbook": {
+      "yesLevels": 79,
+      "noLevels": 114,
+      "yesTop": [
+        32,
+        848.52
+      ],
+      "noTop": [
+        67,
+        4459.62
+      ]
+    },
+    "implied": {
+      "marketProbability": 32.5,
+      "yesBid": 32,
+      "yesAsk": 33,
+      "noBid": 67,
+      "noAsk": 68
+    },
+    "reachability": {
+      "ok": true,
+      "currentPrice": 60445.86,
+      "targetPrice": 60470.94,
+      "direction": "UP",
+      "minutesRemaining": 14,
+      "annualizedVolatility": 0.55,
+      "momentumBps": 0,
+      "distance": 25.08,
+      "distanceBps": 4.15,
+      "expectedStdPrice": 171.58,
+      "zScore": 0.146,
+      "modelProbability": 44.19,
+      "marketProbability": 32.5,
+      "edge": 11.69,
+      "reachabilityGrade": "MEDIUM",
+      "explanation": "BTC needs to settle at or above the target in 14 minutes. Model YES probability is 44.19%."
+    },
+    "mispricing": {
+      "ok": true,
+      "marketProbability": 32.5,
+      "modelProbability": 44.19,
+      "yes": {
+        "rawEdge": 11.69,
+        "adjustedEdge": 10.99,
+        "bid": 32,
+        "ask": 33,
+        "spread": 1
+      },
+      "no": {
+        "rawEdge": -11.69,
+        "adjustedEdge": -12.39,
+        "bid": 67,
+        "ask": 68,
+        "spread": 1
+      },
+      "bestSide": "YES",
+      "bestRawEdge": 11.69,
+      "bestAdjustedEdge": 10.99,
+      "feeBps": 20,
+      "minEdgePct": 5,
+      "strongEdgePct": 10,
+      "maxAllowedSpreadPct": 8,
+      "decision": "TRADE",
+      "edgeGrade": "STRONG",
+      "confidenceScore": 83,
+      "explanation": "YES has the best adjusted edge at 10.99%. Decision: TRADE."
+    },
+    "decision": {
+      "ok": true,
+      "stage": "OBSERVATION_ONLY",
+      "action": "OBSERVATION_ONLY",
+      "reason": "DRY_RUN_SCAN_ONLY",
+      "bestSide": "YES",
+      "bestAdjustedEdge": 10.99,
+      "confidenceScore": 83,
+      "modelProbability": 44.19,
+      "marketProbability": 32.5
+    },
+    "rawMarket": {
+      "ticker": "KXBTC15M-26JUN260415-15",
+      "title": "BTC price up in next 15 mins?",
+      "status": "active",
+      "close_time": "2026-06-26T08:15:00Z"
+    }
+  }
+]

@@ -1,3 +1,5 @@
+import { checkLossChaseGuard } from "./lossChaseGuard.js";
+
 function safeNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -37,6 +39,7 @@ export { resolveKillSwitchEnabled };
 export function evaluateKalshiTradeRisk({
   tradeCandidate,
   currentState = {},
+  recentTrades = [],
   limits = defaultKalshiRiskLimits,
 } = {}) {
   if (!tradeCandidate) {
@@ -90,6 +93,10 @@ export function evaluateKalshiTradeRisk({
   const openExposure = safeNumber(currentState.openExposureUsd);
   const dailyLoss = safeNumber(currentState.dailyLossUsd);
   const tradesToday = safeNumber(currentState.tradesToday);
+  const lossChaseCheck = checkLossChaseGuard(
+    tradeCandidate.marketTicker,
+    recentTrades
+  );
 
   if (tradeSize <= 0) {
     reject("INVALID_TRADE_SIZE", "Trade size must be greater than zero.", { tradeSize });
@@ -165,6 +172,14 @@ export function evaluateKalshiTradeRisk({
       confidence,
       minConfidenceScore: mergedLimits.minConfidenceScore,
     });
+  }
+
+  if (!lossChaseCheck.approved) {
+    reject(lossChaseCheck.reason, lossChaseCheck.detail || "Loss-chasing guard blocked this trade.", {
+      priorTrade: lossChaseCheck.priorTrade || null,
+    });
+  } else {
+    pass("LOSS_CHASE_GUARD_CLEAR", "No same-window loss-chasing conflict detected.");
   }
 
   const failedChecks = checks.filter((check) => !check.passed);

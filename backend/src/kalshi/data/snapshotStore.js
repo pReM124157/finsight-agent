@@ -1,5 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  isMongoDualWriteEnabled,
+  saveMarketSnapshotMongo,
+} from "../storage/mongoPersistence.js";
 
 const SNAPSHOT_PATH =
   process.env.KALSHI_SNAPSHOT_PATH ||
@@ -43,6 +47,12 @@ export function saveMarketSnapshot(snapshot) {
   const trimmed = snapshots.slice(-maxSnapshots);
 
   writeSnapshots(trimmed);
+
+  if (isMongoDualWriteEnabled()) {
+    saveMarketSnapshotMongo(enriched).catch((error) => {
+      console.warn("[mongo] market snapshot dual-write failed:", error.message);
+    });
+  }
 
   return enriched;
 }

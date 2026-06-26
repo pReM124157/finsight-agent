@@ -10,6 +10,8 @@ let lastError = null;
 export function startKalshiScannerScheduler({
   cronExpression = process.env.KALSHI_SCANNER_CRON || "*/5 * * * *",
   enabled = process.env.KALSHI_SCANNER_ENABLED === "true",
+  requestedSizeUsd = Number(process.env.KALSHI_FIXED_TRADE_SIZE_USD || 5),
+  riskLimits = null,
 } = {}) {
   if (!enabled) {
     console.log("[KALSHI SCANNER SCHEDULER] Disabled");
@@ -43,6 +45,8 @@ export function startKalshiScannerScheduler({
         maxCandidates: Number(process.env.KALSHI_SCANNER_MAX_CANDIDATES || 5),
         status: "open",
         dryRun: process.env.KALSHI_SCANNER_DRY_RUN === "true",
+        requestedSizeUsd,
+        riskLimits,
       });
 
       lastResult = {

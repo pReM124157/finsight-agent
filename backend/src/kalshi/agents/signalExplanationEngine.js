@@ -89,6 +89,7 @@ function buildReasoningBullets({
   side,
   btc,
   reachability,
+  distanceGuard,
   mispricing,
   risk,
   targetPrice,
@@ -109,6 +110,11 @@ function buildReasoningBullets({
   const marketProbability = safeNumber(mispricing?.marketProbability);
   const adjustedEdge = safeNumber(mispricing?.bestAdjustedEdge);
   const riskStatus = risk?.status || "NOT_RUN";
+  const guardedDistanceBps =
+    safeNumber(distanceGuard?.distanceBps) ??
+    safeNumber(reachability?.distanceBps);
+  const guardedDistanceUsd =
+    safeNumber(distanceGuard?.distanceUsd);
 
   const bullets = [];
 
@@ -117,7 +123,7 @@ function buildReasoningBullets({
   );
 
   bullets.push(
-    `The move required is ${formatBps(distanceBps)} and the model estimates ${formatPercent(modelProbability)} odds versus a market price of ${formatPercent(marketProbability)}.`
+    `The move required is ${formatBps(guardedDistanceBps)}${guardedDistanceUsd !== null ? ` (${formatUsd(guardedDistanceUsd, 2)})` : ""} and the model estimates ${formatPercent(modelProbability)} odds versus a market price of ${formatPercent(marketProbability)}.`
   );
 
   bullets.push(
@@ -222,6 +228,7 @@ function buildHumanMessage({
 export function buildHumanSignalExplanation({
   btc,
   reachability,
+  distanceGuard,
   mispricing,
   risk,
   paperTrade,
@@ -282,6 +289,14 @@ export function buildHumanSignalExplanation({
     signalType = "RISK_REJECTED";
     headline = "PAPER SIGNAL: RISK REJECTED";
     actionText = "Skip paper trade due to risk gate";
+  } else if (distanceGuard?.status === "WATCH_ONLY") {
+    signalType = "WATCH";
+    headline = "PAPER SIGNAL: WATCH";
+    actionText = "Watch only until the target distance comes closer";
+  } else if (distanceGuard?.status === "REJECTED") {
+    signalType = "SKIP";
+    headline = "PAPER SIGNAL: SKIP";
+    actionText = "Skip paper trade because the target is too far";
   } else if (mispricing?.decision === "WATCH") {
     signalType = "WATCH";
     headline = `PAPER SIGNAL: WATCH ${side || ""}`.trim();
@@ -315,6 +330,7 @@ export function buildHumanSignalExplanation({
     side: finalSide,
     btc,
     reachability,
+    distanceGuard,
     mispricing,
     risk,
     targetPrice: finalTargetPrice,
@@ -329,8 +345,18 @@ export function buildHumanSignalExplanation({
     );
   }
 
+  if (distanceGuard?.status === "WATCH_ONLY") {
+    reasoningBullets.push(
+      distanceGuard.explanation || "The target is a bit too far for this time window, so the setup is watch-only for now."
+    );
+  }
+
   if (signalType === "SKIP") {
-    if (mispricing?.edgeGrade === "SPREAD_TOO_WIDE") {
+    if (distanceGuard?.status === "REJECTED") {
+      reasoningBullets.push(
+        distanceGuard.explanation || "The target is too far for this time window, so the trade is being skipped."
+      );
+    } else if (mispricing?.edgeGrade === "SPREAD_TOO_WIDE") {
       reasoningBullets.push("The market is being skipped because the spread is too wide for the configured threshold.");
     } else {
       reasoningBullets.push("The market is being skipped because the expected edge is not strong enough after costs.");
@@ -394,6 +420,7 @@ export function buildHumanSignalExplanation({
     suggestedPaperSizeUsd: roundNumber(suggestedPaperSizeUsd),
     confidenceScore: roundNumber(confidenceScore),
     spreadCents: roundNumber(spreadCents),
+    distanceGuard: distanceGuard || null,
     reasoningBullets,
     invalidationRules,
     reason: reason || null,
@@ -430,6 +457,7 @@ export function buildSignalFromDecisionFlowResult(result) {
     action: result.action || null,
     btc: result.btc,
     reachability: result.reachability,
+    distanceGuard: result.distanceGuard,
     mispricing: result.mispricing,
     risk: result.risk,
     paperTrade: result.paperTrade,

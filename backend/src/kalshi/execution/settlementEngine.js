@@ -4,6 +4,16 @@ import {
   getPaperTradingStats,
   hasTradeBeenSettled,
 } from "./paperTradingEngine.js";
+import {
+  backfillSettlementOutcome,
+  inferBtcMarketDirection,
+} from "../data/featureSnapshot.js";
+import {
+  findUnsettledSnapshotsByTicker,
+  updateSnapshots,
+} from "../data/featureSnapshotStore.js";
+import { recordLesson } from "../learning/lessonExtractor.js";
+import { settleNoSideShadowAudits } from "../shadow/noSideShadowAudit.js";
 
 function safeNumber(value, fallback = null) {
   const n = Number(value);
@@ -104,16 +114,19 @@ export function settleOpenPaperTradesByBtcPrice({
       continue;
     }
 
-    const direction =
-      safeNumber(trade.targetPrice) >= safeNumber(trade.btcPrice)
-        ? "UP"
-        : "DOWN";
+    const direction = inferBtcMarketDirection(trade);
 
-    const outcome = resolveBtcTargetOutcome({
-      direction,
-      targetPrice: trade.targetPrice,
-      settlementBtcPrice,
-    });
+    const outcome = direction
+      ? resolveBtcTargetOutcome({
+          direction,
+          targetPrice: trade.targetPrice,
+          settlementBtcPrice,
+        })
+      : {
+          ok: false,
+          reason: "INVALID_DIRECTION",
+          actualOutcome: null,
+        };
 
     if (!outcome.ok) {
       skipped.push({
@@ -130,6 +143,8 @@ export function settleOpenPaperTradesByBtcPrice({
       tradeId: trade.id,
       won,
       settlementPrice: won ? 100 : 0,
+      settlementBtcPrice,
+      actualOutcome: outcome.actualOutcome,
     });
 
     if (!result.ok) {
@@ -152,6 +167,7 @@ export function settleOpenPaperTradesByBtcPrice({
       actualOutcome: outcome.actualOutcome,
       result: result.trade.status,
       pnlUsd: result.trade?.pnlUsd ?? null,
+      lessonCategory: result.lesson?.lesson?.category || null,
       ok: true,
       reason: null,
     });
@@ -165,6 +181,110 @@ export function settleOpenPaperTradesByBtcPrice({
     skipped: skipped.length,
     settledTrades: settled,
     skippedTrades: skipped,
+    stats: getPaperTradingStats(),
+  };
+}
+
+export function settleFeatureSnapshotsByBtcPrice({
+  marketTicker = null,
+  settlementBtcPrice,
+  settlementTime = new Date().toISOString(),
+} = {}) {
+  if (!marketTicker) {
+    return {
+      ok: false,
+      reason: "MARKET_TICKER_REQUIRED",
+      checked: 0,
+      settled: 0,
+    };
+  }
+
+  const unsettledRows = findUnsettledSnapshotsByTicker(marketTicker);
+
+  if (unsettledRows.length === 0) {
+    return {
+      ok: true,
+      checked: 0,
+      settled: 0,
+      marketTicker,
+      reason: "NO_UNSETTLED_FEATURE_SNAPSHOTS",
+    };
+  }
+
+  const updates = {};
+  const lessons = [];
+  const lessonErrors = [];
+
+  for (const row of unsettledRows) {
+    const labeled = backfillSettlementOutcome(row, {
+      settlementPrice: settlementBtcPrice,
+      targetPrice: row?.target_price,
+      settlementTime,
+    });
+
+    const key = row?.snapshot_id || row?.id;
+    if (key) {
+      updates[key] = labeled;
+    }
+
+    try {
+      lessons.push(recordLesson(labeled));
+    } catch (error) {
+      lessonErrors.push({
+        snapshotId: key || null,
+        marketTicker: row?.market_ticker || null,
+        message: error.message,
+      });
+    }
+  }
+
+  const result = updateSnapshots(updates);
+  const firstOutcome = unsettledRows[0]?.settlement_outcome || Object.values(updates)[0]?.settlement_outcome || null;
+  const shadowAuditSettlement = settleNoSideShadowAudits({
+    marketTicker,
+    settlementOutcome: firstOutcome,
+    settlementBtcPrice,
+    settlementTime,
+  });
+
+  return {
+    ok: true,
+    marketTicker,
+    checked: unsettledRows.length,
+    settled: result.updated || 0,
+    shadowAuditsUpdated: shadowAuditSettlement.updated || 0,
+    lessonsRecorded: lessons.length,
+    lessonErrors,
+    reason:
+      result.updated > 0
+        ? "FEATURE_SNAPSHOTS_BACKFILLED"
+        : "NO_FEATURE_SNAPSHOT_UPDATES_APPLIED",
+  };
+}
+
+export function settleMarketArtifactsByBtcPrice({
+  marketTicker = null,
+  settlementBtcPrice,
+  settlementTime = new Date().toISOString(),
+} = {}) {
+  const snapshotSettlement = settleFeatureSnapshotsByBtcPrice({
+    marketTicker,
+    settlementBtcPrice,
+    settlementTime,
+  });
+
+  const tradeSettlement = settleOpenPaperTradesByBtcPrice({
+    marketTicker,
+    settlementBtcPrice,
+  });
+
+  return {
+    ok: snapshotSettlement.ok && tradeSettlement.ok,
+    marketTicker,
+    settlementBtcPrice,
+    settlementTime,
+    featureSnapshots: snapshotSettlement,
+    paperTrades: tradeSettlement,
     stats: getPaperTradingStats(),
   };
 }

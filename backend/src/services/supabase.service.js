@@ -9,6 +9,9 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 let supabaseClient = null;
+export const hasSupabaseConfig = Boolean(
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 function getSupabaseClient() {
   if (supabaseClient) return supabaseClient;

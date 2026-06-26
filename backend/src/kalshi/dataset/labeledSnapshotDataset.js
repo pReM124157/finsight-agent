@@ -1,5 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  isMongoDualWriteEnabled,
+  saveLabeledSnapshotMongo,
+} from "../storage/mongoPersistence.js";
 
 const LABELED_SNAPSHOT_DATASET_PATH =
   process.env.KALSHI_LABELED_SNAPSHOT_DATASET_PATH ||
@@ -203,9 +207,16 @@ export function addLabeledSnapshot(record = {}) {
 
   writeDataset(dataset);
 
+  const savedSnapshot = index >= 0 ? dataset[index] : normalized;
+  if (isMongoDualWriteEnabled()) {
+    saveLabeledSnapshotMongo(savedSnapshot).catch((error) => {
+      console.warn("[mongo] labeled snapshot dual-write failed:", error.message);
+    });
+  }
+
   return {
     ok: true,
-    snapshot: index >= 0 ? dataset[index] : normalized,
+    snapshot: savedSnapshot,
   };
 }
 
@@ -259,6 +270,12 @@ export function labelSnapshot({ snapshotId = null, id = null, settledSide = null
   };
 
   writeDataset(dataset);
+
+  if (isMongoDualWriteEnabled()) {
+    saveLabeledSnapshotMongo(dataset[index]).catch((error) => {
+      console.warn("[mongo] labeled snapshot dual-write failed:", error.message);
+    });
+  }
 
   return {
     ok: true,

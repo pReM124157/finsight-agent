@@ -1,11 +1,12 @@
 import cron from "node-cron";
 
 import { getAggregatedBtcPrice } from "../data/cryptoPriceClient.js";
+import { getValidSnapshots } from "../data/featureSnapshotStore.js";
 import {
   getPaperTrades,
   getPaperTradingStats,
 } from "../execution/paperTradingEngine.js";
-import { settleOpenPaperTradesByBtcPrice } from "../execution/settlementEngine.js";
+import { settleMarketArtifactsByBtcPrice } from "../execution/settlementEngine.js";
 
 let schedulerTask = null;
 let isRunning = false;
@@ -19,15 +20,41 @@ function safeNumber(value, fallback = null) {
 }
 
 function isTradeExpired(trade) {
-  const openedAtMs = new Date(trade?.openedAt).getTime();
-  const minutes = safeNumber(trade?.minutesRemaining, 15);
+  return isRecordExpired(trade?.openedAt, trade?.minutesRemaining, 15);
+}
+
+function isRecordExpired(timestamp, minutes, fallbackMinutes = 15) {
+  const openedAtMs = new Date(timestamp).getTime();
+  const resolvedMinutes = safeNumber(minutes, fallbackMinutes);
 
   if (!Number.isFinite(openedAtMs)) {
     return false;
   }
 
-  const expiryMs = openedAtMs + Math.max(1, minutes) * 60 * 1000;
+  const expiryMs = openedAtMs + Math.max(1, resolvedMinutes) * 60 * 1000;
   return Date.now() >= expiryMs;
+}
+
+function getExpiredFeatureMarkets() {
+  const validSnapshots = getValidSnapshots(undefined, { limit: 1000000 });
+  const expiredByTicker = new Map();
+
+  for (const snapshot of validSnapshots) {
+    if (snapshot?.settlement_outcome || !snapshot?.market_ticker) {
+      continue;
+    }
+
+    const capturedAt = snapshot?.captured_at || snapshot?.createdAt;
+    if (!isRecordExpired(capturedAt, snapshot?.minutes_remaining, 15)) {
+      continue;
+    }
+
+    if (!expiredByTicker.has(snapshot.market_ticker)) {
+      expiredByTicker.set(snapshot.market_ticker, snapshot);
+    }
+  }
+
+  return Array.from(expiredByTicker.values());
 }
 
 function buildIdleResult(reason, openTrades, expiredTrades = []) {
@@ -59,10 +86,11 @@ export async function runPaperSettlementOnce() {
   try {
     const openTrades = getPaperTrades({ status: "OPEN", limit: 1000 });
     const expiredTrades = openTrades.filter(isTradeExpired);
+    const expiredFeatureMarkets = getExpiredFeatureMarkets();
 
-    if (expiredTrades.length === 0) {
+    if (expiredTrades.length === 0 && expiredFeatureMarkets.length === 0) {
       const result = buildIdleResult(
-        "NO_EXPIRED_OPEN_TRADES",
+        "NO_EXPIRED_OPEN_TRADES_OR_SNAPSHOTS",
         openTrades.length,
         expiredTrades
       );
@@ -79,19 +107,39 @@ export async function runPaperSettlementOnce() {
 
     const results = [];
     let settledTrades = 0;
+    let settledSnapshots = 0;
+    const settlementTargets = new Map();
 
     for (const trade of expiredTrades) {
-      const settlement = settleOpenPaperTradesByBtcPrice({
-        tradeId: trade.id,
+      if (trade?.marketTicker) {
+        settlementTargets.set(trade.marketTicker, {
+          marketTicker: trade.marketTicker,
+          openedAt: trade.openedAt,
+          minutesRemaining: trade.minutesRemaining,
+        });
+      }
+    }
+
+    for (const snapshot of expiredFeatureMarkets) {
+      settlementTargets.set(snapshot.market_ticker, {
+        marketTicker: snapshot.market_ticker,
+        openedAt: snapshot.captured_at || snapshot.createdAt,
+        minutesRemaining: snapshot.minutes_remaining,
+      });
+    }
+
+    for (const target of settlementTargets.values()) {
+      const settlement = settleMarketArtifactsByBtcPrice({
+        marketTicker: target.marketTicker,
         settlementBtcPrice: btc.price,
       });
 
-      settledTrades += settlement.settled || 0;
+      settledTrades += settlement.paperTrades?.settled || 0;
+      settledSnapshots += settlement.featureSnapshots?.settled || 0;
       results.push({
-        marketTicker: trade.marketTicker,
-        tradeId: trade.id,
-        openedAt: trade.openedAt,
-        minutesRemaining: trade.minutesRemaining,
+        marketTicker: target.marketTicker,
+        openedAt: target.openedAt,
+        minutesRemaining: target.minutesRemaining,
         result: settlement,
       });
     }
@@ -102,7 +150,9 @@ export async function runPaperSettlementOnce() {
       settlementBtcPrice: btc.price,
       openTrades: openTrades.length,
       expiredTrades: expiredTrades.length,
+      expiredSnapshotMarkets: expiredFeatureMarkets.length,
       settledTrades,
+      settledSnapshots,
       results,
       stats: getPaperTradingStats(),
       timestamp: new Date().toISOString(),

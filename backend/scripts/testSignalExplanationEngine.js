@@ -30,6 +30,9 @@ async function main() {
     minEdgePct: 5,
     strongEdgePct: 10,
     maxAllowedSpreadPct: 8,
+    riskLimits: {
+      killSwitchEnabled: false,
+    },
     notes: "Signal explanation engine test",
   });
 
@@ -53,4 +56,3 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-
