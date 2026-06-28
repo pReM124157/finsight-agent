@@ -173,7 +173,7 @@ export function evaluateStrategyZoneGuard({
     };
   }
 
-  if (entry >= 95) {
+  if (entry >= config.maxEntryPrice + 1) {
     return {
       ok: false,
       status: "BLOCKED",

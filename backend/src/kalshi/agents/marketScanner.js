@@ -530,7 +530,6 @@ export async function scanKalshiBtcMarkets({
           };
 
       let decision = null;
-
       if (!dryRun) {
         decision = await runPaperDecisionFlow({
           marketTicker,
