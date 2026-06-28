@@ -37,6 +37,7 @@ import {
   LIVE_STRATEGY_NAME,
   PAPER_TRADE_SOURCES,
 } from "./kalshi/execution/paperTradingEngine.js";
+import { buildPaperRiskLimits, getPaperTradingConfig } from "./kalshi/execution/paperTradingConfig.js";
 import { hasSupabaseConfig } from "./services/supabase.service.js";
 import app from "./app.js";
 
@@ -49,12 +50,10 @@ const PORT = process.env.PORT || 5000;
 const RENDER_DEMO_MODE = String(process.env.RENDER_DEMO_MODE || "")
   .trim()
   .toLowerCase() === "true";
-const requestedSizeUsd = Number(process.env.KALSHI_FIXED_TRADE_SIZE_USD || 5);
+const paperTradingConfig = getPaperTradingConfig();
+const requestedSizeUsd = paperTradingConfig.requestedSizeUsd;
 const statusPath = path.resolve(repoRoot, "artifacts", "today-kalshi-paper-session-status.json");
-const riskLimits = {
-  killSwitchEnabled: false,
-  allowLiveExecution: false,
-};
+const riskLimits = buildPaperRiskLimits();
 
 console.log("[BOOT CONFIG]", {
   nodeEnv: process.env.NODE_ENV || null,
@@ -78,6 +77,7 @@ function writeRuntimeStatus(payload = {}) {
         owner: "backend_api",
         pid: process.pid,
         requestedSizeUsd,
+        paperTradingConfig,
         ...payload,
       },
       null,

@@ -15,6 +15,7 @@ import {
   LIVE_STRATEGY_NAME,
   PAPER_TRADE_SOURCES,
 } from "../src/kalshi/execution/paperTradingEngine.js";
+import { buildPaperRiskLimits, getPaperTradingConfig } from "../src/kalshi/execution/paperTradingConfig.js";
 import { connectMongo } from "../src/db/mongoClient.js";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,12 +27,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
 
-const requestedSizeUsd = Number(process.env.KALSHI_FIXED_TRADE_SIZE_USD || 5);
+const paperTradingConfig = getPaperTradingConfig();
+const requestedSizeUsd = paperTradingConfig.requestedSizeUsd;
 const strategySessionId = process.env.KALSHI_ACTIVE_SESSION_ID || `PID-${process.pid}`;
-const riskLimits = {
-  killSwitchEnabled: false,
-  allowLiveExecution: false,
-};
+const riskLimits = buildPaperRiskLimits();
 const statusPath = path.resolve(repoRoot, "artifacts", "today-kalshi-paper-session-status.json");
 
 function writeStatus(payload = {}) {
@@ -46,6 +45,7 @@ function writeStatus(payload = {}) {
       {
         updatedAt: new Date().toISOString(),
         requestedSizeUsd,
+        paperTradingConfig,
         ...payload,
       },
       null,

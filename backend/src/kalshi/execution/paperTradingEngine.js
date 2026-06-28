@@ -14,10 +14,10 @@ const PAPER_LEDGER_PATH =
 export const PAPER_TRADE_SOURCES = {
   LEGACY_TEST: "LEGACY_TEST",
   MANUAL_TEST: "MANUAL_TEST",
-  LIVE_GUARDED_STRATEGY: "LIVE_GUARDED_STRATEGY",
+  LIVE_GUARDED_STRATEGY: "LIVE_STRATEGY",
 };
 
-export const LIVE_STRATEGY_NAME = "YES_EDGE_10_20_MIN_8_12_PRICE_LT_94";
+export const LIVE_STRATEGY_NAME = "zone-v3-60c-floor";
 
 function ensureLedgerDir() {
   const dir = path.dirname(PAPER_LEDGER_PATH);

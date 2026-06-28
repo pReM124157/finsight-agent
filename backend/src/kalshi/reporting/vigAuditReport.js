@@ -237,7 +237,7 @@ function normalizeRows(featureRows = [], labeledRows = [], scale = 100) {
       const currentStrategyZone =
         currentEdge !== null &&
         currentEdge >= 0.06 &&
-        currentEdge <= 0.10 &&
+        currentEdge <= 0.22 &&
         yesAsk >= 0.6 &&
         yesAsk < 0.95 &&
         minutesRemaining >= 8 &&
@@ -445,7 +445,7 @@ export function printVigAuditReport(report) {
   console.log(`Avg spread (vig): ${formatPct(report.totals.avgSpread, 2)}`);
   console.log(`Avg half-spread: ${formatPct(report.totals.avgHalfSpread, 2)}`);
   console.log("");
-  console.log("--- Strategy Zone (current: edge 6-10%, 8-12 min) ---");
+  console.log("--- Strategy Zone (current: edge 6-22%, 8-12 min) ---");
   console.log(`Snapshots in zone: ${report.totals.currentStrategyZone}`);
   console.log(`Avg stored/current edge: ${formatPct(report.totals.avgCurrentEdge)}`);
   console.log(`Avg vig-adjusted edge: ${formatPct(report.totals.avgVigAdjustedEdge)}`);

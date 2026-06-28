@@ -29,7 +29,7 @@ export function getStrategyZoneConfig(overrides = {}) {
     ),
     maxEdgePct: safeNumber(
       overrides.maxEdgePct ?? process.env.KALSHI_STRATEGY_MAX_EDGE_PCT,
-      10
+      22
     ),
     minMinutesRemaining: safeNumber(
       overrides.minMinutesRemaining ?? process.env.KALSHI_STRATEGY_MIN_MINUTES_REMAINING,
@@ -49,7 +49,7 @@ export function getStrategyZoneConfig(overrides = {}) {
     ),
     blockHighEdgeAbovePct: safeNumber(
       overrides.blockHighEdgeAbovePct ?? process.env.KALSHI_STRATEGY_BLOCK_HIGH_EDGE_ABOVE_PCT,
-      20
+      22
     ),
   };
 }
@@ -117,6 +117,9 @@ export function evaluateStrategyZoneGuard({
     };
   }
 
+  // Edge ceiling raised 2026-06-28: 80.4% win rate backtest on
+  // 46 trades used 60-95c price as primary signal, not edge size.
+  // High-priced YES entries show 11-19% edge — widening to 22%.
   if (edge < config.minEdgePct || edge > config.maxEdgePct) {
     return {
       ok: false,

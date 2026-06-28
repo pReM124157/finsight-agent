@@ -31,6 +31,23 @@ function getEntryProbabilityForSide({ side, mispricing }) {
   return null;
 }
 
+function getUtcDateKey(value = new Date()) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function buildDailyLossKillSwitch({ currentState, riskLimits }) {
+  const maxDailyLossUsd = safeNumber(riskLimits?.maxDailyLossUsd, 15);
+  const dailyLossUsd = safeNumber(currentState?.dailyLossUsd, 0);
+  const triggered = dailyLossUsd >= maxDailyLossUsd;
+
+  return {
+    triggered,
+    date: getUtcDateKey(),
+    dailyLossUsd: Number(dailyLossUsd.toFixed(2)),
+    maxDailyLossUsd: Number(maxDailyLossUsd.toFixed(2)),
+  };
+}
+
 export async function runPaperDecisionFlow({
   marketTicker,
   targetPrice,
@@ -242,6 +259,45 @@ export async function runPaperDecisionFlow({
   const openTrades = getPaperTrades({ status: "OPEN", limit: 500 });
   const allRecentTrades = getPaperTrades({ limit: 1000 });
   const currentState = summarizePaperRiskState(allRecentTrades);
+  const maxOpenPositions = safeNumber(riskLimits?.maxOpenPositions, null);
+  const paperKillSwitch = buildDailyLossKillSwitch({ currentState, riskLimits });
+
+  if (paperKillSwitch.triggered) {
+    console.log("[paper] daily loss limit hit — no new trades today", paperKillSwitch);
+    return {
+      ok: true,
+      stage: "PAPER_DAILY_LOSS_LIMIT",
+      action: "NO_PAPER_TRADE",
+      reason: "PAPER_DAILY_LOSS_LIMIT_HIT",
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      strategyZoneGuard,
+      risk: null,
+      paperKillSwitch,
+      paperTrade: null,
+    };
+  }
+
+  if (maxOpenPositions !== null && openTrades.length >= maxOpenPositions) {
+    return {
+      ok: true,
+      stage: "PAPER_OPEN_POSITION_LIMIT",
+      action: "NO_PAPER_TRADE",
+      reason: "PAPER_MAX_OPEN_POSITIONS_REACHED",
+      btc,
+      reachability,
+      distanceGuard,
+      mispricing,
+      shadowNoTrade,
+      strategyZoneGuard,
+      risk: null,
+      paperKillSwitch,
+      paperTrade: null,
+    };
+  }
 
   const autoSizeUsd =
     mispricing.bestAdjustedEdge >= 25 ? 500 :
@@ -276,6 +332,7 @@ export async function runPaperDecisionFlow({
       strategyZoneGuard,
       disagreementGuard,
       risk: null,
+      paperKillSwitch,
       paperTrade: null,
     };
   }
@@ -309,7 +366,9 @@ export async function runPaperDecisionFlow({
       distanceGuard,
       mispricing,
       shadowNoTrade,
+      strategyZoneGuard,
       risk,
+      paperKillSwitch,
       paperTrade: null,
     };
   }
@@ -357,6 +416,7 @@ export async function runPaperDecisionFlow({
     strategyZoneGuard,
     disagreementGuard,
     risk,
+    paperKillSwitch,
     paperTrade,
   };
 }
